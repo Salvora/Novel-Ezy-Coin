@@ -89,7 +89,7 @@
         // Observe changes in the entire document's body
         observer.observe(document.body, {
             childList: true, // Watch for added/removed child nodes
-            subtree: true    // Watch within the subtree of the body
+            subtree: true // Watch within the subtree of the body
         });
 
         // Also check if elements are already present initially
