@@ -2,7 +2,7 @@
 // @name         Ezy-Coin-Spend
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Make it easy to spend your coins to unlock chapters
+// @description  Userscript to spend your coins to unlock chapters easily
 // @match        https://darkstartranslations.com/manga/*
 // @match        https://hiraethtranslation.com/novel/*
 
