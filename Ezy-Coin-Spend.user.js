@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.2
+// @version     1.2.1
 // @author      Salvora
-// @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.svg
+// @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/main/Ezy-Coin-Spend.user.js
 // @downloadURL https://github.com/Salvora/Novel-Ezy-Coin/raw/main/Ezy-Coin-Spend.user.js
 // @supportURL  https://github.com/Salvora/Novel-Ezy-Coin/issues
