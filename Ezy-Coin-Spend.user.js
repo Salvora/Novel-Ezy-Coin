@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.3.1
+// @version     1.3.2
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Ezy-Coin-Spend.user.js
@@ -188,12 +188,11 @@
     }
   }
 
-  // Function to create and insert the button
   function createUnlockAllButton() {
     const targetElement = document.getElementById("init-links");
     if (targetElement) {
       const button = document.createElement("button");
-
+  
       button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
       button.classList.add("c-btn", "c-btn_style-1", "nav-links");
       button.style.backgroundColor = "#fe6a10";
@@ -201,22 +200,42 @@
       button.style.color = "#ffffff";
       button.style.transition = "transform 0.1s ease";
       button.style.lineHeight = "normal";
-      
+      button.style.position = "relative"; // Ensure the spinner is positioned correctly
+
       // Create spinner element
       const spinner = document.createElement("span");
-      spinner.classList.add("spinner", "hidden"); // Add a class to hide the spinner initially
+      spinner.classList.add("spinner");
       spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-      button.appendChild(spinner);
+      spinner.style.display = "none"; // Hide spinner initially
+  
       targetElement.appendChild(button);
       console.log("Button inserted successfully");
+  
       button.addEventListener("click", async () => {
-        spinner.classList.remove("hidden"); // Show spinner
+        const originalContent = button.innerHTML; // Save original button content
+        const originalWidth = button.offsetWidth; // Save original button width
+        button.style.width = `${originalWidth}px`; // Set button width to its original width
+        button.innerHTML = ''; // Clear button content
+        button.appendChild(spinner); // Add spinner to button
+        spinner.style.display = "inline-block"; // Show spinner
+        button.disabled = true; // Disable the button
+
         await unlockAllChapters();
-        spinner.classList.add("hidden"); // Hide spinner
+  
+        spinner.style.display = "none"; // Hide spinner
+        button.innerHTML = originalContent; // Restore original button content
+        button.style.width = 'auto'; // Reset button width to auto
+        button.disabled = false; // Re-enable the button
+
       });
     } else {
       console.error("Target element for button not found");
     }
+  }
+
+  // Function to simulate a delay
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // Function to unlock all chapters
@@ -258,6 +277,13 @@
       alert("An error occurred while unlocking chapters. Please try again.");
     }
   }
+
+  // // Function to unlock all chapters (simulated) for debugging
+  // async function unlockAllChapters() {
+  //   console.log("Simulating unlock process...");
+  //   await delay(3000); // Simulate a 3-second delay
+  //   console.log("Unlock process complete.");
+  // }
 
   // Function to inject CSS styles
   function injectStyles() {
