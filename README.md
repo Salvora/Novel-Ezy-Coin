@@ -18,6 +18,9 @@ Userscript to spend your coins to unlock chapters easily.
 
 Ezy-Coin-Spend is a userscript designed to help you spend your coins to unlock chapters easily on supported websites.
 
+- Adds clickable buttons for each chapter to immediately unlock desired chapters without visiting the chapters.
+- Adds a button to unlock all locked chapters.
+
 ## Tested Environments
 
 - Firefox, Tampermonkey
