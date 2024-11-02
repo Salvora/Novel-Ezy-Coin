@@ -192,8 +192,11 @@
     const targetElement = document.getElementById("init-links");
     if (targetElement) {
       const button = document.createElement("button");
-  
-      button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+      // Function to update button content dynamically
+      const updateButtonContent = () => {
+        button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+      };
+      updateButtonContent();
       button.classList.add("c-btn", "c-btn_style-1", "nav-links");
       button.style.backgroundColor = "#fe6a10";
       button.id = "unlock-all-button"; // Assign an ID
@@ -223,7 +226,7 @@
         await unlockAllChapters();
   
         spinner.style.display = "none"; // Hide spinner
-        button.innerHTML = originalContent; // Restore original button content
+        updateButtonContent(); // Restore original button content dynamically
         button.style.width = 'auto'; // Reset button width to auto
         button.disabled = false; // Re-enable the button
 
@@ -233,10 +236,7 @@
     }
   }
 
-  // Function to simulate a delay
-  function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+
 
   // Function to unlock all chapters
   async function unlockAllChapters() {
@@ -283,6 +283,11 @@
   //   console.log("Simulating unlock process...");
   //   await delay(3000); // Simulate a 3-second delay
   //   console.log("Unlock process complete.");
+  // }
+
+  // // Function to simulate a delay
+  // function delay(ms) {
+  //   return new Promise(resolve => setTimeout(resolve, ms));
   // }
 
   // Function to inject CSS styles
