@@ -3,7 +3,7 @@
 // @namespace   https://github.com/Salvora
 // @version     1.2
 // @author      Salvora
-// @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
+// @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.svg
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/main/Ezy-Coin-Spend.js
 // @downloadURL https://github.com/Salvora/Novel-Ezy-Coin/raw/main/Ezy-Coin-Spend.js
 // @supportURL  https://github.com/Salvora/Novel-Ezy-Coin/issues
