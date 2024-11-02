@@ -199,10 +199,19 @@
       button.style.color = "#ffffff";
       button.style.transition = "transform 0.1s ease";
       button.style.lineHeight = "normal";
-
+      
+      // Create spinner element
+      const spinner = document.createElement("span");
+      spinner.classList.add("spinner", "hidden"); // Add a class to hide the spinner initially
+      spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+      button.appendChild(spinner);
       targetElement.appendChild(button);
       console.log("Button inserted successfully");
-      button.addEventListener("click", unlockAllChapters); // Use direct function reference
+      button.addEventListener("click", async () => {
+        spinner.classList.remove("hidden"); // Show spinner
+        await unlockAllChapters();
+        spinner.classList.add("hidden"); // Hide spinner
+      });
     } else {
       console.error("Target element for button not found");
     }
