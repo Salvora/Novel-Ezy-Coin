@@ -9,7 +9,9 @@
 // @supportURL  https://github.com/Salvora/Novel-Ezy-Coin/issues
 // @description Userscript to spend your coins to unlock chapters easily
 // @match       https://darkstartranslations.com/manga/*
+// @exclude     https://darkstartranslations.com/manga/*/chapter-*
 // @match       https://hiraethtranslation.com/novel/*
+// @exclude     https://hiraethtranslation.com/novel/*/chapter-*
 // @license     GPL-3.0-or-later; https://www.gnu.org/licenses/gpl-3.0.html
 // @grant       none
 // @run-at      document-end
