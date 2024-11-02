@@ -1,4 +1,4 @@
 - Add styles for the locked chapters to behave like buttons
-- Add loading circle on these buttons
 - update the styles and make the link clickable with unlocked button and a button styles
 - add unlock all button (Total coins to spend, popup for verification, tooltip and animation)
+- test buying chapters one by one when no balance
