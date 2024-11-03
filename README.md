@@ -43,6 +43,9 @@ Should work with every modern browser with tampermonkey.
 
 - Firefox, Tampermonkey
 
+> [!TIP]
+> Should work with every modern browser with tampermonkey.
+
 ## Working Sites
 
 - [Hiraeth Translation](https://hiraethtranslation.com/)
