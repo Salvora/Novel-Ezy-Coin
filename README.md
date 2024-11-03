@@ -31,8 +31,6 @@ Ezy-Coin-Spend is a userscript designed to help you spend your coins to unlock c
 
 ## Tested Environments
 
-Should work with every modern browser with tampermonkey.
-
 - Firefox, Tampermonkey
 
 > [!TIP]
