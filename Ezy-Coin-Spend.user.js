@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.4
+// @version     1.4.1
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Ezy-Coin-Spend.user.js
@@ -168,6 +168,9 @@
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
+  
+          // Remove the event listeners from the <a> element
+          linkElement.onclick = null; // Remove inline onclick if any
         }
   
         // Remove the event listener after success
