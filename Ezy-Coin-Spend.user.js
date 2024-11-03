@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.4.1
+// @version     1.4
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Ezy-Coin-Spend.user.js
@@ -168,9 +168,6 @@
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
-  
-          // Remove the event listeners from the <a> element
-          linkElement.onclick = null; // Remove inline onclick if any
         }
   
         // Remove the event listener after success
@@ -218,6 +215,7 @@
       console.log("Button inserted successfully");
   
       button.addEventListener("click", async () => {
+        const originalContent = button.innerHTML; // Save original button content
         const originalWidth = button.offsetWidth; // Save original button width
         button.style.width = `${originalWidth}px`; // Set button width to its original width
         button.innerHTML = ''; // Clear button content
