@@ -168,6 +168,9 @@
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
+  
+          // Remove the event listeners from the <a> element
+          linkElement.onclick = null; // Remove inline onclick if any
         }
   
         // Remove the event listener after success
