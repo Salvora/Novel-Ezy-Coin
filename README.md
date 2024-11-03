@@ -21,7 +21,25 @@ Ezy-Coin-Spend is a userscript designed to help you spend your coins to unlock c
 - Adds clickable buttons for each chapter to immediately unlock desired chapters without visiting the chapters.
 - Adds a button to unlock all locked chapters.
 
+<div align="center">
+  <img src="Images/unlockAll-ss1.png" alt="Unlock All Button" style="margin-bottom: 20px; border-radius: 10px;">
+</div>
+
+<div align="center">
+  <img src="Images/unlockAll-ss2.png" alt="Unlock All Button" style="margin-bottom: 20px; border-radius: 10px;">
+</div>
+
+<div align="center">
+  <img src="Images/unlockAll-alert-ss3.png" alt="Unlock All Button Alert" style="margin-bottom: 20px; border-radius: 10px;">
+</div>
+
+<div align="center">
+  <img src="Images/unlockButton-ss1.png" alt="Unlock Button" style="margin-bottom: 20px; border-radius: 10px;">
+</div>
+
 ## Tested Environments
+
+Should work with every modern browser with tampermonkey.
 
 - Firefox, Tampermonkey
 
