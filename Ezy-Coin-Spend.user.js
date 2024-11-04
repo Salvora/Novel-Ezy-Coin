@@ -196,10 +196,12 @@
     const targetElement = document.getElementById("init-links");
     if (targetElement) {
       const button = document.createElement("button");
+
       // Function to update button content dynamically
       const updateButtonContent = () => {
         button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
       };
+      
       updateButtonContent();
       button.classList.add("c-btn", "c-btn_style-1", "nav-links");
       button.style.backgroundColor = "#fe6a10";
