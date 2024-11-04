@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.4
+// @version     1.4.2
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Ezy-Coin-Spend.user.js
@@ -168,6 +168,10 @@
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
+
+          // Clone the <a> element to remove all event listeners
+          const newLinkElement = linkElement.cloneNode(true);
+          linkElement.parentNode.replaceChild(newLinkElement, linkElement);
         }
   
         // Remove the event listener after success
@@ -192,10 +196,12 @@
     const targetElement = document.getElementById("init-links");
     if (targetElement) {
       const button = document.createElement("button");
+
       // Function to update button content dynamically
       const updateButtonContent = () => {
         button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
       };
+      
       updateButtonContent();
       button.classList.add("c-btn", "c-btn_style-1", "nav-links");
       button.style.backgroundColor = "#fe6a10";
