@@ -168,7 +168,7 @@
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
-  
+
           // Clone the <a> element to remove all event listeners
           const newLinkElement = linkElement.cloneNode(true);
           linkElement.parentNode.replaceChild(newLinkElement, linkElement);
@@ -221,6 +221,7 @@
       console.log("Button inserted successfully");
   
       button.addEventListener("click", async () => {
+        const originalContent = button.innerHTML; // Save original button content
         const originalWidth = button.offsetWidth; // Save original button width
         button.style.width = `${originalWidth}px`; // Set button width to its original width
         button.innerHTML = ''; // Clear button content
