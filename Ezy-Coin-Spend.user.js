@@ -37,6 +37,7 @@
   }
 
   function getBalance() {
+
     balanceElement = document.querySelector(".c-user_menu li:first-child a");
     if (balanceElement) {
       const balanceText = balanceElement.textContent;
@@ -182,14 +183,17 @@
       } else {
         console.error("Failed to buy chapter:", data.data.message);
         coin.disabled = false; // Re-enable the coin element if the request fails
+        return false
       }
   
     } catch (error) {
       console.error("Error:", error);
       coin.disabled = false; // Re-enable the coin element if an error occurs
+      return false;
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
     }
+    return true;
   }
 
   function createUnlockAllButton() {
@@ -261,22 +265,32 @@
     const coinElements = Array.from(document.querySelectorAll(".premium-block .coin"));
     const batchSize = 5; // Number of coins to process concurrently
     let currentIndex = 0;
+    let stopProcessing = false;
 
     // Function to process a batch of coins
     async function processBatch() {
       const batch = coinElements.slice(currentIndex, currentIndex + batchSize);
-      const promises = batch.map(coin => unlockChapter(coin));
-      await Promise.all(promises);
+      for (const coin of batch) {
+        const result = await unlockChapter(coin);
+        if (result === false) {
+          stopProcessing = true;
+          break;
+        }
+      }
       currentIndex += batchSize;
     }
 
     // Process all coins in batches
     try {
-      while (currentIndex < coinElements.length) {
+      while (currentIndex < coinElements.length && !stopProcessing) {
         await processBatch();
         console.log(`Processed ${currentIndex} of ${coinElements.length} coins`);
       }
-      // alert("All chapters have been successfully unlocked!");
+      if (stopProcessing) {
+        console.log("Stopped processing further coins due to an error.");
+      } else {
+        console.log("All chapters have been successfully unlocked!");
+      }
     } catch (error) {
       console.error("Error unlocking chapters:", error);
       alert("An error occurred while unlocking chapters. Please try again.");
