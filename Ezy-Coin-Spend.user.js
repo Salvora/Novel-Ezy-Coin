@@ -262,7 +262,7 @@
     }
 
     // Unlock all coins
-    const coinElements = Array.from(document.querySelectorAll(".premium-block .coin"));
+    const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
     const batchSize = 5; // Number of coins to process concurrently
     let currentIndex = 0;
     let stopProcessing = false;
