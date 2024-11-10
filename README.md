@@ -59,6 +59,7 @@ This script is designed to prevent spending more than required. Please, report a
 - Make balance calculation dynamic
 - For UnlockAll, start unlocking from the lowest numbered chapter insted of the highest number
 - Stop the execution when there are no coins left during the unlockAll process
+- Create a seperate css style sheet
 
 ## Contributing
 
