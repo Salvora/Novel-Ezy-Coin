@@ -4,6 +4,7 @@
 // @version     1.4.2
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
+// @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
 // @updateURL   https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Ezy-Coin-Spend.user.js
 // @updateURL   https://update.greasyfork.org/scripts/516727/Novel-Ezy-Coin.user.js
 // @downloadURL https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Ezy-Coin-Spend.user.js
