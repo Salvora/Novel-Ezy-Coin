@@ -203,7 +203,7 @@
     const targetElement = document.getElementById("init-links");
     if (targetElement) {
       const button = document.createElement("button");
-
+  
       // Function to update button content dynamically
       const updateButtonContent = () => {
         button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
@@ -217,7 +217,7 @@
       button.style.transition = "transform 0.1s ease";
       button.style.lineHeight = "normal";
       button.style.position = "relative"; // Ensure the spinner is positioned correctly
-
+  
       // Create spinner element
       const spinner = document.createElement("span");
       spinner.classList.add("spinner");
@@ -234,14 +234,8 @@
         button.appendChild(spinner); // Add spinner to button
         spinner.style.display = "inline-block"; // Show spinner
         button.disabled = true; // Disable the button
-
-        await unlockAllChapters();
   
-        spinner.style.display = "none"; // Hide spinner
-        updateButtonContent(); // Restore original button content dynamically
-        button.style.width = 'auto'; // Reset button width to auto
-        button.disabled = false; // Re-enable the button
-
+        await unlockAllChapters();
       });
     } else {
       console.error("Target element for button not found");
@@ -263,13 +257,13 @@
     if (!userConfirmed) {
       return;
     }
-
+  
     // Unlock all coins
     const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
     const batchSize = 5; // Number of coins to process concurrently
     let currentIndex = 0;
     let stopProcessing = false;
-
+  
     // Function to process a batch of coins
     async function processBatch() {
       const batch = coinElements.slice(currentIndex, currentIndex + batchSize);
@@ -282,7 +276,7 @@
       }
       currentIndex += batchSize;
     }
-
+  
     // Process all coins in batches
     try {
       while (currentIndex < coinElements.length && !stopProcessing) {
@@ -297,20 +291,16 @@
     } catch (error) {
       console.error("Error unlocking chapters:", error);
       alert("An error occurred while unlocking chapters. Please try again.");
+    } finally {
+      // Hide spinner and re-enable button after processing is complete
+      const button = document.getElementById("unlock-all-button");
+      const spinner = button.querySelector(".spinner");
+      spinner.style.display = "none"; // Hide spinner
+      button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`; // Restore original button content
+      button.style.width = 'auto'; // Reset button width to auto
+      button.disabled = false; // Re-enable the button
     }
   }
-
-  // // Function to unlock all chapters (simulated) for debugging
-  // async function unlockAllChapters() {
-  //   console.log("Simulating unlock process...");
-  //   await delay(3000); // Simulate a 3-second delay
-  //   console.log("Unlock process complete.");
-  // }
-
-  // // Function to simulate a delay
-  // function delay(ms) {
-  //   return new Promise(resolve => setTimeout(resolve, ms));
-  // }
 
   // Function to inject CSS styles
   function injectStyles() {
