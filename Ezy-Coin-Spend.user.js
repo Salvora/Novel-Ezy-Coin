@@ -3,6 +3,8 @@
 // @namespace   https://github.com/Salvora
 // @version     1.4.2
 // @grant       GM_addStyle
+// @grant       GM_getResourceText
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/styles.css?v=1.0.0
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -303,60 +305,6 @@
     }
   }
 
-  // Function to inject CSS styles
-  function injectStyles() {
-    const style = document.createElement("style");
-    style.textContent = `
-      .coin {
-          transition: transform 0.1s ease;
-      }
-
-      .coin.clicked {
-          transform: scale(0.90);
-      }
-
-      .c-btn:hover {
-          background-color: black !important;
-          color: white !important;
-      }
-
-      .c-btn:active {
-          transform: scale(0.95);
-          background-color: #333333 !important;
-      }
-
-      .c-btn-custom-1 {
-        display: inline-block;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: middle;
-        cursor: pointer;
-        border-radius: 5px;
-        font-weight: 600;
-      }
-
-      .c-btn-custom-1:hover {
-          background-color: blue !important;
-          color: white !important;
-      }
-      .c-btn-custom-1:active {
-          transform: scale(0.95);
-          background-color: #333333 !important;
-      }
-
-      .flash-red {
-        color: red !important;
-        animation: flash 1s;
-      }
-
-      @keyframes flash {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
-      }
-    `;
-    GM_addStyle(css);
-  }
-
   // Main initialization function
   function init() {
     if (!window.location.pathname.includes("/chapter")) {
@@ -366,7 +314,7 @@
         return;
       }
 
-      injectStyles();
+      GM_addStyle(GM_getResourceText("customCSS"));
       createUnlockAllButton();
 
       observer = new MutationObserver((mutations) => {
