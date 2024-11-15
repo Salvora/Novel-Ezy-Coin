@@ -4,7 +4,7 @@
 // @version     1.4.2
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/styles.css?v=1.0.0
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.0.0
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -19,7 +19,6 @@
 // @match       https://hiraethtranslation.com/novel/*
 // @exclude     https://hiraethtranslation.com/novel/*/chapter*
 // @license     GPL-3.0-or-later
-// @grant       none
 // @run-at      document-end
 // ==/UserScript==
 
@@ -54,6 +53,24 @@
     }
     console.error("Balance element not found");
     return 0;
+  }
+
+  async function getDynamicBalance() {
+    const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: "action=wp_manga_get_user_coin",
+    });
+
+    const data = await response.json();
+    if (data.success && data.data.coin) {
+      return parseInt(data.data.coin);
+    }
+    console.error("Failed to get balance:", data.data.message);
+    return
   }
 
   function updateBalance(delta) {
