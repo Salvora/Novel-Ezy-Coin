@@ -149,12 +149,10 @@
       return;
     }
   
-    const chapterId = chapterIdMatch[1];
-    const nonceValue = nonceElement.value;
     const postData = new URLSearchParams({
       action: "wp_manga_buy_chapter",
-      chapter: chapterId,
-      nonce: nonceValue,
+      chapter: chapterIdMatch[1],
+      nonce: nonceElement.value,
     });
     try {
       const response = await fetch(
