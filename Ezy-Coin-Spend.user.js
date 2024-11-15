@@ -2,6 +2,7 @@
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
 // @version     1.4.2
+// @grant       GM_addStyle
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -353,7 +354,7 @@
         50% { opacity: 0; }
       }
     `;
-    document.head.appendChild(style);
+    GM_addStyle(css);
   }
 
   // Main initialization function
