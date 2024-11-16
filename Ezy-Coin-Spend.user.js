@@ -252,15 +252,41 @@
         button.appendChild(spinner); // Add spinner to button
         spinner.style.display = "inline-block"; // Show spinner
         button.disabled = true; // Disable the button
-  
-        await unlockAllChapters();
+        try {
+          await unlockAllChapters();
+        } catch (error) {
+          console.error("Error unlocking all chapters:", error);
+        } finally {
+          spinner.style.display = "none"; // Hide spinner
+          updateButtonContent(); // Restore original button content dynamically
+          button.style.width = 'auto'; // Reset button width to auto
+          button.disabled = false; // Re-enable the button
+        }
       });
     } else {
       console.error("Target element for button not found");
     }
   }
 
-
+  async function withConcurrencyLimit(limit, tasks) {
+    const results = [];
+    const executing = [];
+  
+    for (const task of tasks) {
+      const p = Promise.resolve().then(() => task());
+      results.push(p);
+  
+      if (limit <= tasks.length) {
+        const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+        executing.push(e);
+        if (executing.length >= limit) {
+          await Promise.race(executing);
+        }
+      }
+    }
+  
+    return Promise.all(results);
+  }
 
   // Function to unlock all chapters
   async function unlockAllChapters() {
@@ -275,51 +301,30 @@
     if (!userConfirmed) {
       return;
     }
-  
+
     // Unlock all coins
     const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
-    const batchSize = 5; // Number of coins to process concurrently
-    let currentIndex = 0;
-    let stopProcessing = false;
-  
-    // Function to process a batch of coins
-    async function processBatch() {
-      const batch = coinElements.slice(currentIndex, currentIndex + batchSize);
-      for (const coin of batch) {
-        const result = await unlockChapter(coin);
-        if (result === false) {
-          stopProcessing = true;
-          break;
-        }
+    const concurrencyLimit = 5; // Limit the number of concurrent requests
+
+    // Function to unlock a single coin
+    async function unlockSingleCoin(coin) {
+      const result = await unlockChapter(coin);
+      if (result === false) {
+        throw new Error("Failed to unlock chapter");
       }
-      currentIndex += batchSize;
     }
-  
-    // Process all coins in batches
+
+    // Process all coins with concurrency limit
     try {
-      while (currentIndex < coinElements.length && !stopProcessing) {
-        await processBatch();
-        console.log(`Processed ${currentIndex} of ${coinElements.length} coins`);
-      }
-      if (stopProcessing) {
-        console.log("Stopped processing further coins due to an error.");
-      } else {
-        console.log("All chapters have been successfully unlocked!");
-      }
+      await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => () => unlockSingleCoin(coin)));
+      console.log("All chapters have been successfully unlocked!");
     } catch (error) {
       console.error("Error unlocking chapters:", error);
       alert("An error occurred while unlocking chapters. Please try again.");
-    } finally {
-      // Hide spinner and re-enable button after processing is complete
-      const button = document.getElementById("unlock-all-button");
-      const spinner = button.querySelector(".spinner");
-      spinner.style.display = "none"; // Hide spinner
-      button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`; // Restore original button content
-      button.style.width = 'auto'; // Reset button width to auto
-      button.disabled = false; // Re-enable the button
     }
   }
 
+  
   // Main initialization function
   function init() {
     if (!window.location.pathname.includes("/chapter")) {
