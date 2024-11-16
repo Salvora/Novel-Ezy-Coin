@@ -354,7 +354,7 @@
         console.error("Target div not found");
       }
     } else {
-      console.log("Script is not running on a chapter page");
+      console.log("Script is not running on a series page");
     }
   }
 
