@@ -30,6 +30,7 @@
   let balance = 0; // Variable to store the balance value
   let totalCost = 0; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
+  let autoUnlock = false; // Variable to store the auto unlock status
 
   // Function to get the appropriate selector based on the current URL
   function getSelector() {
@@ -55,23 +56,23 @@
     return 0;
   }
 
-  async function getDynamicBalance() {
-    const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: "action=wp_manga_get_user_coin",
-    });
+  // async function getDynamicBalance() {
+  //   const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+  //       "X-Requested-With": "XMLHttpRequest",
+  //     },
+  //     body: "action=wp_manga_get_user_coin",
+  //   });
 
-    const data = await response.json();
-    if (data.success && data.data.coin) {
-      return parseInt(data.data.coin);
-    }
-    console.error("Failed to get balance:", data.data.message);
-    return
-  }
+  //   const data = await response.json();
+  //   if (data.success && data.data.coin) {
+  //     return parseInt(data.data.coin);
+  //   }
+  //   console.error("Failed to get balance:", data.data.message);
+  //   return
+  // }
 
   function updateBalance(delta) {
     balance -= delta;
@@ -107,7 +108,10 @@
     // Update button text
     const unlockAllbutton = document.getElementById("unlock-all-button");
     if (unlockAllbutton) {
-      unlockAllbutton.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+      const buttonText = unlockAllbutton.querySelector("span:first-child");
+      if (buttonText) {
+        buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+      }
     }
 
     console.log(`Total cost calculated: ${totalCost}`);
@@ -222,12 +226,19 @@
     if (targetElement) {
       const button = document.createElement("button");
   
-      // Function to update button content dynamically
-      const updateButtonContent = () => {
-        button.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
-      };
-      
-      updateButtonContent();
+      // Create a span element for the button text
+      const buttonText = document.createElement("span");
+      buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+
+      // Create spinner element
+      const spinner = document.createElement("span");
+      spinner.classList.add("spinner");
+      spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+      spinner.style.display = "none"; // Hide spinner initially
+
+      button.appendChild(buttonText);
+      button.appendChild(spinner);
+
       button.classList.add("c-btn", "c-btn_style-1", "nav-links");
       button.style.backgroundColor = "#fe6a10";
       button.id = "unlock-all-button"; // Assign an ID
@@ -236,22 +247,21 @@
       button.style.lineHeight = "normal";
       button.style.position = "relative"; // Ensure the spinner is positioned correctly
   
-      // Create spinner element
-      const spinner = document.createElement("span");
-      spinner.classList.add("spinner");
-      spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-      spinner.style.display = "none"; // Hide spinner initially
-  
       targetElement.appendChild(button);
       console.log("Button inserted successfully");
   
+      // Function to update button content dynamically
+      const updateButtonContent = () => {
+        buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+      };
+
       button.addEventListener("click", async () => {
         const originalWidth = button.offsetWidth; // Save original button width
         button.style.width = `${originalWidth}px`; // Set button width to its original width
-        button.innerHTML = ''; // Clear button content
-        button.appendChild(spinner); // Add spinner to button
+        buttonText.style.display = "none"; // Hide button text
         spinner.style.display = "inline-block"; // Show spinner
         button.disabled = true; // Disable the button
+
         try {
           await unlockAllChapters();
         } catch (error) {
@@ -259,6 +269,7 @@
         } finally {
           spinner.style.display = "none"; // Hide spinner
           updateButtonContent(); // Restore original button content dynamically
+          buttonText.style.display = "inline"; // Show button text
           button.style.width = 'auto'; // Reset button width to auto
           button.disabled = false; // Re-enable the button
         }
@@ -324,6 +335,19 @@
     }
   }
 
+  function autoUnlockChapters() {
+      const chapterList = document.getElementById("manga-reading-nav-head");
+      const nextButton = document.getElementById("manga-reading-nav-foot").querySelector(".nav-next");
+      // Check if next button is premium
+      const CurrentChapter = chapterList.querySelectorAll("ol li.active")[0].textContent.trim();
+      const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
+      const selectedOption = selectElement.querySelector("option[selected='selected']");
+
+      if (chapterList) {
+
+      }
+
+  }
   
   // Main initialization function
   function init() {
