@@ -56,23 +56,31 @@
     return 0;
   }
 
-  // async function getDynamicBalance() {
-  //   const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-  //       "X-Requested-With": "XMLHttpRequest",
-  //     },
-  //     body: "action=wp_manga_get_user_coin",
-  //   });
+  async function getDynamicBalance() {
+    const parentElement = document.querySelector('.c-user_menu');
+    const nonceElement = parentElement.querySelector('a[href*="wp-login.php?action=logout"]');
+    const url = new URL(nonceElement.href);
+    const nonceValue = url.searchParams.get('_wpnonce');
+    const postData = new URLSearchParams({
+      action: "wp_manga_chapter_coin_user_balance",
+      nonce: nonceValue,
+    });
+    const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: postData.toString(),
+    });
 
-  //   const data = await response.json();
-  //   if (data.success && data.data.coin) {
-  //     return parseInt(data.data.coin);
-  //   }
-  //   console.error("Failed to get balance:", data.data.message);
-  //   return
-  // }
+    const data = await response.json();
+    if (data.success && data.data.coin) {
+      return parseInt(data.data.coin);
+    }
+    console.error("Failed to get balance:", data.data.message);
+    return
+  }
 
   function updateBalance(delta) {
     balance -= delta;

@@ -61,6 +61,7 @@ This script is designed to prevent spending more than required. Please, report a
 - Stop the execution when there are no coins left during the unlockAll process
 - Create a seperate css style sheet
 - Auto-unlocking
+- Add a timeout to spinner
 
 ## Contributing
 
