@@ -113,7 +113,8 @@
 
     // Calculate totalCost using Array.from and reduce
     totalCost = Array.from(coinElements)
-      .reduce((total, coin) => total + (parseFloat(coin.textContent) || 0), 0);
+      .reduce((total, coin) => total + (parseInt(coin.textContent.replace(/,/g, ''), 10) || 0), 0);
+
 
     // Update button text
     const unlockAllbutton = document.getElementById("unlock-all-button");
