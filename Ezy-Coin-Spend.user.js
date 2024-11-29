@@ -43,13 +43,15 @@
   }
 
   function getBalance() {
-
     balanceElement = document.querySelector(".c-user_menu li:first-child a");
     if (balanceElement) {
       const balanceText = balanceElement.textContent;
-      const balanceMatch = balanceText.match(/Balance:\s*\d+/);
+      // Update the regex to capture digits and commas
+      const balanceMatch = balanceText.match(/Balance:\s*([\d,]+)/);
       if (balanceMatch) {
-        return parseInt(balanceMatch[0].replace('Balance: ', ''));
+        // Remove commas from the balance string and parse it as an integer
+        const balanceString = balanceMatch[1].replace(/,/g, '');
+        return parseInt(balanceString, 10);
       }
     }
     console.error("Balance element not found");
