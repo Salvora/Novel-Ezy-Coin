@@ -51,38 +51,39 @@
       if (balanceMatch) {
         // Remove commas from the balance string and parse it as an integer
         const balanceString = balanceMatch[1].replace(/,/g, '');
-        return parseInt(balanceString, 10);
+        const parsedBalance = parseInt(balanceString, 10);
+        return isNaN(parsedBalance) ? 0 : parsedBalance;
       }
     }
-    console.error("Balance element not found");
+    console.error("Balance element not found or invalid format");
     return 0;
   }
 
-  async function getDynamicBalance() {
-    const parentElement = document.querySelector('.c-user_menu');
-    const nonceElement = parentElement.querySelector('a[href*="wp-login.php?action=logout"]');
-    const url = new URL(nonceElement.href);
-    const nonceValue = url.searchParams.get('_wpnonce');
-    const postData = new URLSearchParams({
-      action: "wp_manga_chapter_coin_user_balance",
-      nonce: nonceValue,
-    });
-    const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-      },
-      body: postData.toString(),
-    });
+  // async function getDynamicBalance() {
+  //   const parentElement = document.querySelector('.c-user_menu');
+  //   const nonceElement = parentElement.querySelector('a[href*="wp-login.php?action=logout"]');
+  //   const url = new URL(nonceElement.href);
+  //   const nonceValue = url.searchParams.get('_wpnonce');
+  //   const postData = new URLSearchParams({
+  //     action: "wp_manga_chapter_coin_user_balance",
+  //     nonce: nonceValue,
+  //   });
+  //   const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+  //       "X-Requested-With": "XMLHttpRequest",
+  //     },
+  //     body: postData.toString(),
+  //   });
 
-    const data = await response.json();
-    if (data.success && data.data.coin) {
-      return parseInt(data.data.coin);
-    }
-    console.error("Failed to get balance:", data.data.message);
-    return
-  }
+  //   const data = await response.json();
+  //   if (data.success && data.data.coin) {
+  //     return parseInt(data.data.coin);
+  //   }
+  //   console.error("Failed to get balance:", data.data.message);
+  //   return
+  // }
 
   function updateBalance(delta) {
     balance -= delta;
@@ -157,6 +158,7 @@
     const chapterElement = coin.closest(".wp-manga-chapter");
     const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
     const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
+    
     if (!chapterElement || !chapterIdMatch || !nonceElement) {
       console.error("Required element not found");
       coin.disabled = false; // Re-enable the coin element if required elements are not found
@@ -247,17 +249,19 @@
       spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
       spinner.style.display = "none"; // Hide spinner initially
 
+
+      button.id = "unlock-all-button"; // Assign an ID
+      button.classList.add("c-btn", "c-btn_style-1", "nav-links");
+      button.style.cssText = `
+      background-color: #fe6a10;
+      color: #ffffff;
+      transition: transform 0.1s ease;
+      line-height: normal;
+      position: relative;
+    `;
+
       button.appendChild(buttonText);
       button.appendChild(spinner);
-
-      button.classList.add("c-btn", "c-btn_style-1", "nav-links");
-      button.style.backgroundColor = "#fe6a10";
-      button.id = "unlock-all-button"; // Assign an ID
-      button.style.color = "#ffffff";
-      button.style.transition = "transform 0.1s ease";
-      button.style.lineHeight = "normal";
-      button.style.position = "relative"; // Ensure the spinner is positioned correctly
-  
       targetElement.appendChild(button);
       console.log("Button inserted successfully");
   
@@ -328,18 +332,11 @@
     const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
     const concurrencyLimit = 5; // Limit the number of concurrent requests
 
-    // Function to unlock a single coin
-    async function unlockSingleCoin(coin) {
-      const result = await unlockChapter(coin);
-      if (result === false) {
-        throw new Error("Failed to unlock chapter");
-      }
-    }
-
     // Process all coins with concurrency limit
     try {
-      await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => () => unlockSingleCoin(coin)));
+      await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => () => unlockChapter(coin)));
       console.log("All chapters have been successfully unlocked!");
+      alert("All chapters have been successfully unlocked!");
     } catch (error) {
       console.error("Error unlocking chapters:", error);
       alert("An error occurred while unlocking chapters. Please try again.");
