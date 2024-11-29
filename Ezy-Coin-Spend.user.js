@@ -336,7 +336,6 @@
     try {
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => () => unlockChapter(coin)));
       console.log("All chapters have been successfully unlocked!");
-      alert("All chapters have been successfully unlocked!");
     } catch (error) {
       console.error("Error unlocking chapters:", error);
       alert("An error occurred while unlocking chapters. Please try again.");
