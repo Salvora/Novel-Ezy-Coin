@@ -332,11 +332,16 @@
 
     // Process all coins with concurrency limit
     try {
-      await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => () => unlockChapter(coin)));
-      console.log("All chapters have been successfully unlocked!");
+      await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
+        const result = await unlockChapter(coin);
+        if (!result) {
+          console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
+        }
+      }));
+      console.log("All chapters have been processed!");
     } catch (error) {
-      console.error("Error unlocking chapters:", error);
-      alert("An error occurred while unlocking chapters. Please try again.");
+      console.error("Error processing chapters:", error);
+      alert("An error occurred while processing chapters. Please try again.");
     }
   }
 
