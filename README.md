@@ -62,6 +62,8 @@ This script is designed to prevent spending more than required. Please, report a
 - Create a seperate css style sheet
 - Auto-unlocking
 - Add a timeout to spinner
+- test flash red
+- spinner for indiviual chapters
 
 ## Contributing
 

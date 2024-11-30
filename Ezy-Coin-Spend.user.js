@@ -4,7 +4,7 @@
 // @version     1.4.2
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.0.0
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.0.2
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -238,7 +238,9 @@
     const targetElement = document.getElementById("init-links");
     if (targetElement) {
       const button = document.createElement("button");
-  
+      button.id = "unlock-all-button"; // Assign an ID
+      button.classList.add("c-btn", "c-btn_style-1", "nav-links");
+
       // Create a span element for the button text
       const buttonText = document.createElement("span");
       buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
@@ -247,18 +249,6 @@
       const spinner = document.createElement("span");
       spinner.classList.add("spinner");
       spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-      spinner.style.display = "none"; // Hide spinner initially
-
-
-      button.id = "unlock-all-button"; // Assign an ID
-      button.classList.add("c-btn", "c-btn_style-1", "nav-links");
-      button.style.cssText = `
-      background-color: #fe6a10;
-      color: #ffffff;
-      transition: transform 0.1s ease;
-      line-height: normal;
-      position: relative;
-    `;
 
       button.appendChild(buttonText);
       button.appendChild(spinner);
@@ -274,7 +264,7 @@
         const originalWidth = button.offsetWidth; // Save original button width
         button.style.width = `${originalWidth}px`; // Set button width to its original width
         buttonText.style.display = "none"; // Hide button text
-        spinner.style.display = "inline-block"; // Show spinner
+        spinner.classList.add("show"); // Show spinner
         button.disabled = true; // Disable the button
 
         try {
@@ -282,7 +272,7 @@
         } catch (error) {
           console.error("Error unlocking all chapters:", error);
         } finally {
-          spinner.style.display = "none"; // Hide spinner
+          spinner.classList.remove("show"); // Hide spinner
           updateButtonContent(); // Restore original button content dynamically
           buttonText.style.display = "inline"; // Show button text
           button.style.width = 'auto'; // Reset button width to auto
