@@ -163,7 +163,7 @@
       console.error("Required element not found");
       coin.disabled = false; // Re-enable the coin element if required elements are not found
       processingCoins.delete(coin); // Remove coin from the set
-      return;
+      return false;
     }
   
     const postData = new URLSearchParams({
@@ -171,24 +171,31 @@
       chapter: chapterIdMatch[1],
       nonce: nonceElement.value,
     });
+
+    const fetchWithTimeout = (url, options, timeout = 5000) => {
+      return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Request timed out')), timeout)
+        )
+      ]);
+    };
+
     try {
-      const response = await fetch(
-        `${window.location.origin}/wp-admin/admin-ajax.php`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: postData.toString(),
-        }
-      );
+      const response = await fetchWithTimeout(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: postData.toString(),
+      });
   
       const data = await response.json();
       console.log("Successfully sent the request:", data);
       if (data.success && data.data.status) {
         // Update the balance element
-        updateBalance(parseInt(coin.textContent));
+        updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
   
         // Remove the premium-block class from the chapter element
         chapterElement.classList.remove("premium-block");
@@ -227,6 +234,7 @@
     } catch (error) {
       console.error("Error:", error);
       coin.disabled = false; // Re-enable the coin element if an error occurs
+      findAndLinkifyCoins(); // Update the total cost and button text
       return false;
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
