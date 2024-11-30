@@ -158,7 +158,7 @@
     const chapterElement = coin.closest(".wp-manga-chapter");
     const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
     const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
-    
+  
     if (!chapterElement || !chapterIdMatch || !nonceElement) {
       console.error("Required element not found");
       coin.disabled = false; // Re-enable the coin element if required elements are not found
@@ -166,12 +166,19 @@
       return false;
     }
   
+    // Create spinner element
+    const spinner = document.createElement("span");
+    spinner.classList.add("spinner");
+    spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+    coin.appendChild(spinner);
+    spinner.classList.add("show"); // Show spinner
+  
     const postData = new URLSearchParams({
       action: "wp_manga_buy_chapter",
       chapter: chapterIdMatch[1],
       nonce: nonceElement.value,
     });
-
+  
     const fetchWithTimeout = (url, options, timeout = 5000) => {
       return Promise.race([
         fetch(url, options),
@@ -180,7 +187,7 @@
         )
       ]);
     };
-
+  
     try {
       const response = await fetchWithTimeout(`${window.location.origin}/wp-admin/admin-ajax.php`, {
         method: "POST",
@@ -214,7 +221,7 @@
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
-
+  
           // Clone the <a> element to remove all event listeners
           const newLinkElement = linkElement.cloneNode(true);
           linkElement.parentNode.replaceChild(newLinkElement, linkElement);
@@ -228,16 +235,17 @@
       } else {
         console.error("Failed to buy chapter:", data.data.message);
         coin.disabled = false; // Re-enable the coin element if the request fails
-        return false
+        return false;
       }
   
     } catch (error) {
       console.error("Error:", error);
       coin.disabled = false; // Re-enable the coin element if an error occurs
-      findAndLinkifyCoins(); // Update the total cost and button text
       return false;
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
+      spinner.classList.remove("show"); // Hide spinner
+      coin.removeChild(spinner); // Remove spinner element
     }
     return true;
   }
