@@ -4,7 +4,7 @@
 // @version     1.4.2
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.0.3#md5=3fe29c54ebf8a942713f5ba6d09b4d70
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.0.4#md5=3fe29c54ebf8a942713f5ba6d09b4d70
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -133,17 +133,13 @@
   async function handleCoinClick(event) {
     event.preventDefault();
     const coin = event.currentTarget;
-    const chapterCoinCost = parseInt(coin.textContent);
+    const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ''), 10);
     if (processingCoins.has(coin)) {
       console.log("Coin is already being processed, ignoring click");
       return;
     }
     if (!checkBalance(chapterCoinCost)) {
-      // Flash the entire coin element
-      coin.classList.add('flash-red', 'fa-times-circle');
-      setTimeout(() => {
-        coin.classList.remove('flash-red', 'fa-times-circle');
-      }, 1000);
+      flashCoin(coin);
       return;
     }
     processingCoins.add(coin); // Add coin to the set
@@ -151,7 +147,26 @@
     coin.classList.add("clicked");
     console.log("Coin clicked");
     setTimeout(() => coin.classList.remove("clicked"), 100);
-    await unlockChapter(coin);
+    const result = await unlockChapter(coin);
+    if (!result) {
+      flashCoin(coin);
+      console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
+    }
+  }
+
+  // Function to flash the coin with fa-times-circle icon
+  function flashCoin(coin) {
+    const originalContent = coin.innerHTML;
+
+    // Replace the content of the coin element with the fa-times-circle icon
+    coin.innerHTML = '<i class="fas fa-times-circle"></i>';
+    coin.classList.add('flash-red');
+
+    setTimeout(() => {
+      coin.classList.remove('flash-red');
+      // Restore the original content after the flash effect
+      coin.innerHTML = originalContent;
+    }, 1000);
   }
 
   async function unlockChapter(coin) {
@@ -343,6 +358,7 @@
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
         const result = await unlockChapter(coin);
         if (!result) {
+          flashCoin(coin);
           console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
         }
       }));

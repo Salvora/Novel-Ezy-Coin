@@ -53,11 +53,18 @@
 }
 
 .flash-red {
-  color: red !important;
-  animation: flash 1s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: flash-red 1s forwards !important;
+  background-color: red !important;
 }
 
-@keyframes flash {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+.flash-red:hover {
+  background-color: red !important;
+}
+
+@keyframes flash-red {
+  0% { background-color: red !important; }
+  100% { background-color: transparent !important; }
 }
