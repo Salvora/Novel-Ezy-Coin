@@ -57,13 +57,7 @@ This script is designed to prevent spending more than required. Please, report a
 ## TO DO
 
 - Make balance calculation dynamic
-- For UnlockAll, start unlocking from the lowest numbered chapter insted of the highest number
-- Stop the execution when there are no coins left during the unlockAll process
-- Create a seperate css style sheet
 - Auto-unlocking
-- Add a timeout to spinner
-- test flash red
-- spinner for indiviual chapters
 
 ## Contributing
 
