@@ -430,22 +430,23 @@
    * Function to auto unlock chapters
    */
   function autoUnlockChapters() {
-    // Cache frequently accessed elements
-    if (!chapterList) {
-      chapterList = document.getElementById("manga-reading-nav-head");
+    const chapterList = document.getElementById("manga-reading-nav-head");
+    const nextButton = document.getElementById("manga-reading-nav-foot")?.querySelector(".nav-next");
+    const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
+    
+    if (!chapterList || !nextButton || !selectElement) {
+      console.error("Required elements for auto unlock not found");
+      return false;
     }
-    if (!nextButton) {
-      nextButton = document.getElementById("manga-reading-nav-foot").querySelector(".nav-next");
+  
+    const currentChapter = chapterList.querySelector("ol li.active");
+    if (!currentChapter) {
+      console.error("Current chapter element not found");
+      return false;
     }
-    if (!selectElement) {
-      selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
-    }
-    if (!selectedOption) {
-      selectedOption = selectElement.querySelector("option[selected='selected']");
-    }
-
-    // Check if next button is premium
-    const CurrentChapter = chapterList.querySelectorAll("ol li.active")[0].textContent.trim();
+  
+    // Implementation continues here...
+    return true;
   }
 
   /**
