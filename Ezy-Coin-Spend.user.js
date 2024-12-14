@@ -37,7 +37,7 @@
   const selectorCache = new Map();
   const SETTINGS = {
     checkboxId: 'auto-unlock-checkbox',
-    templateUrl: 'ezy-coin-settings.html'
+    resourceName: 'SETTINGS_HTML'
 };
   // Add debounce utility near top of script after variables
   const debounce = (fn, delay) => {
