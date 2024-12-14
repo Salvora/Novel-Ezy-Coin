@@ -32,6 +32,9 @@
   let observer; // Define the observer globally
   let autoUnlock = false; // Variable to store the auto unlock status
 
+  // Cache for selectors
+  const selectorCache = new Map();
+
   // Function to get the appropriate selector based on the current URL
   function getSelector() {
     const SiteSelectors = {
@@ -40,6 +43,15 @@
     };
     const url = window.location.origin;
     return SiteSelectors[url];
+  }
+
+  // Function to get cached selector
+  function getCachedSelector() {
+    const url = window.location.origin;
+    if (!selectorCache.has(url)) {
+      selectorCache.set(url, getSelector());
+    }
+    return selectorCache.get(url);
   }
 
   function getBalance() {
@@ -368,18 +380,22 @@
       if (!userConfirmed) {
         return;
       }
-
-      // Unlock all coins
+  
       const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
-      const concurrencyLimit = 5; // Limit the number of concurrent requests
-
-      // Process all coins with concurrency limit
-      
+      const concurrencyLimit = 5;
+  
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
-        const result = await unlockChapter(coin);
-        if (!result) {
+        try {
+          const result = await unlockChapter(coin);
+          if (!result) {
+            flashCoin(coin);
+            console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
+          }
+        } catch (error) {
           flashCoin(coin);
-          console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
+          console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
+        } finally {
+          processingCoins.delete(coin); // Ensure coin is removed from the set
         }
       }));
       console.log("All chapters have been processed!");
@@ -425,7 +441,7 @@
           }
         });
   
-        const targetDiv = document.querySelector(getSelector());
+        const targetDiv = document.querySelector(getCachedSelector());
         if (targetDiv) {
           findAndLinkifyCoins();
           observer.observe(targetDiv, { childList: true, subtree: true });
