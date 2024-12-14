@@ -477,6 +477,14 @@
           }
         });
 
+        // Add cleanup listener right after observer creation
+        window.addEventListener('unload', () => {
+          if (observer) {
+            observer.disconnect();
+            observer = null;
+          }
+          
+        });
         const targetDiv = document.querySelector(getCachedSelector());
         if (targetDiv) {
           findAndLinkifyCoins();
