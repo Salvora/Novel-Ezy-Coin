@@ -84,9 +84,10 @@
           const parsedBalance = parseInt(balanceString, 10);
           return isNaN(parsedBalance) ? 0 : parsedBalance;
         }
-      }
+      } else {
       console.error("Balance element not found or invalid format");
       return 0;
+      }
     } catch (error) {
       console.error("Error getting balance:", error);
       return 0;
