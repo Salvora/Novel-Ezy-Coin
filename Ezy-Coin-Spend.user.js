@@ -33,6 +33,17 @@
   // Cache for selectors
   const selectorCache = new Map();
 
+  // Add debounce utility near top of script after variables
+  const debounce = (fn, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => fn.apply(null, args), delay);
+    };
+  };
+  // Create debounced version of findAndLinkifyCoins
+  const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
+
   /**
    * Function to get the appropriate selector based on the current URL
    * @returns {string} The selector for the current site
@@ -287,7 +298,7 @@
         coin.removeEventListener('click', handleCoinClick);
 
         // Call findAndLinkifyCoins to update the total cost and button text
-        findAndLinkifyCoins();
+        debouncedFindAndLinkifyCoins();
       } else {
         console.error("Failed to buy chapter:", data.data.message);
         coin.disabled = false; // Re-enable the coin element if the request fails
@@ -467,17 +478,6 @@
 
         GM_addStyle(GM_getResourceText("customCSS"));
         createUnlockAllButton();
-        
-        // Add debounce utility near top of script after variables
-        const debounce = (fn, delay) => {
-          let timeoutId;
-          return (...args) => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => fn.apply(null, args), delay);
-          };
-        };
-        // Create debounced version of findAndLinkifyCoins
-        const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
 
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
