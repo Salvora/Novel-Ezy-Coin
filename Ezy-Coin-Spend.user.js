@@ -35,7 +35,10 @@
   // Cache for selectors
   const selectorCache = new Map();
 
-  // Function to get the appropriate selector based on the current URL
+  /**
+   * Function to get the appropriate selector based on the current URL
+   * @returns {string} The selector for the current site
+   */
   function getSelector() {
     const SiteSelectors = {
       "https://darkstartranslations.com": "#manga-chapters-holder",
@@ -45,7 +48,10 @@
     return SiteSelectors[url];
   }
 
-  // Function to get cached selector
+  /**
+   * Function to get cached selector
+   * @returns {string} The cached selector for the current site
+   */
   function getCachedSelector() {
     const url = window.location.origin;
     if (!selectorCache.has(url)) {
@@ -54,6 +60,10 @@
     return selectorCache.get(url);
   }
 
+  /**
+   * Function to get the user's balance
+   * @returns {number} The user's balance
+   */
   function getBalance() {
     try {
       balanceElement = document.querySelector(".c-user_menu li:first-child a");
@@ -74,37 +84,20 @@
     }
   }
 
-  // async function getDynamicBalance() {
-  //   const parentElement = document.querySelector('.c-user_menu');
-  //   const nonceElement = parentElement.querySelector('a[href*="wp-login.php?action=logout"]');
-  //   const url = new URL(nonceElement.href);
-  //   const nonceValue = url.searchParams.get('_wpnonce');
-  //   const postData = new URLSearchParams({
-  //     action: "wp_manga_chapter_coin_user_balance",
-  //     nonce: nonceValue,
-  //   });
-  //   const response = await fetch(`${window.location.origin}/wp-admin/admin-ajax.php`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-  //       "X-Requested-With": "XMLHttpRequest",
-  //     },
-  //     body: postData.toString(),
-  //   });
-
-  //   const data = await response.json();
-  //   if (data.success && data.data.coin) {
-  //     return parseInt(data.data.coin);
-  //   }
-  //   console.error("Failed to get balance:", data.data.message);
-  //   return
-  // }
-
+  /**
+   * Function to update the user's balance
+   * @param {number} delta - The amount to subtract from the balance
+   */
   function updateBalance(delta) {
     balance -= delta;
     balanceElement.textContent = `Balance: ${balance}`;
   }
 
+  /**
+   * Function to check if the user has enough balance
+   * @param {number} cost - The cost to check against the balance
+   * @returns {boolean} True if the user has enough balance, false otherwise
+   */
   function checkBalance(cost) {
     if (cost > balance) {
       console.error("Balance is not enough for purchasing the chapter!!!");
@@ -113,12 +106,14 @@
     return true;
   }
 
-  // Function to handle newly added elements
+  /**
+   * Function to handle newly added elements and linkify coins
+   */
   function findAndLinkifyCoins() {
     try {
       const coinElements = document.querySelectorAll(".premium-block .coin");
       console.log(`Found ${coinElements.length} coin elements`);
-  
+
       coinElements.forEach((coin) => {
         if (!coin.dataset.listenerAdded) {
           coin.addEventListener("click", handleCoinClick);
@@ -127,10 +122,10 @@
           console.log("Event listener added to coin elements");
         }
       });
-  
+
       totalCost = Array.from(coinElements)
         .reduce((total, coin) => total + (parseInt(coin.textContent.replace(/,/g, ''), 10) || 0), 0);
-  
+
       const unlockAllbutton = document.getElementById("unlock-all-button");
       if (unlockAllbutton) {
         const buttonText = unlockAllbutton.querySelector("span:first-child");
@@ -138,14 +133,17 @@
           buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
         }
       }
-  
+
       console.log(`Total cost calculated: ${totalCost}`);
     } catch (error) {
       console.error("Error finding and linking coins:", error);
     }
   }
 
-  // Function to handle the click event
+  /**
+   * Function to handle the click event on a coin
+   * @param {Event} event - The click event
+   */
   async function handleCoinClick(event) {
     event.preventDefault();
     const coin = event.currentTarget;
@@ -181,7 +179,10 @@
     }
   }
 
-  // Function to flash the coin with fa-times-circle icon
+  /**
+   * Function to flash the coin with fa-times-circle icon
+   * @param {HTMLElement} coin - The coin element to flash
+   */
   function flashCoin(coin) {
     const originalContent = coin.innerHTML;
 
@@ -196,31 +197,36 @@
     }, 1000);
   }
 
+  /**
+   * Function to unlock a chapter
+   * @param {HTMLElement} coin - The coin element
+   * @returns {Promise<boolean>} True if the chapter was unlocked successfully, false otherwise
+   */
   async function unlockChapter(coin) {
     const chapterElement = coin.closest(".wp-manga-chapter");
     const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
     const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
-  
+
     if (!chapterElement || !chapterIdMatch || !nonceElement) {
       console.error("Required element not found");
       coin.disabled = false; // Re-enable the coin element if required elements are not found
       processingCoins.delete(coin); // Remove coin from the set
       return false;
     }
-  
+
     // Create spinner element
     const spinner = document.createElement("span");
     spinner.classList.add("spinner");
     spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
     coin.appendChild(spinner);
     spinner.classList.add("show"); // Show spinner
-  
+
     const postData = new URLSearchParams({
       action: "wp_manga_buy_chapter",
       chapter: chapterIdMatch[1],
       nonce: nonceElement.value,
     });
-  
+
     const fetchWithTimeout = (url, options, timeout = 5000) => {
       return Promise.race([
         fetch(url, options),
@@ -229,7 +235,7 @@
         )
       ]);
     };
-  
+
     try {
       const response = await fetchWithTimeout(`${window.location.origin}/wp-admin/admin-ajax.php`, {
         method: "POST",
@@ -239,39 +245,39 @@
         },
         body: postData.toString(),
       });
-  
+
       const data = await response.json();
       console.log("Successfully sent the request:", data);
       if (data.success && data.data.status) {
         // Update the balance element
         updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
-  
+
         // Remove the premium-block class from the chapter element
         chapterElement.classList.remove("premium-block");
-  
+
         // Remove the c-btn-custom-1 class from the coin element
         coin.classList.remove("c-btn-custom-1");
-  
+
         // Update the href attribute of the <a> element with the URL from the response
         const linkElement = chapterElement.querySelector('a');
         if (linkElement) {
           linkElement.href = data.data.url;
-  
+
           // Update the icon class from fas fa-lock to fas fa-lock-open
           const iconElement = linkElement.querySelector('i.fas.fa-lock');
           if (iconElement) {
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
           }
-  
+
           // Clone the <a> element to remove all event listeners
           const newLinkElement = linkElement.cloneNode(true);
           linkElement.parentNode.replaceChild(newLinkElement, linkElement);
         }
-  
+
         // Remove the event listener after success
         coin.removeEventListener('click', handleCoinClick);
-  
+
         // Call findAndLinkifyCoins to update the total cost and button text
         findAndLinkifyCoins();
       } else {
@@ -279,7 +285,7 @@
         coin.disabled = false; // Re-enable the coin element if the request fails
         return false;
       }
-  
+
     } catch (error) {
       console.error("Error:", error);
       coin.disabled = false; // Re-enable the coin element if an error occurs
@@ -292,6 +298,9 @@
     return true;
   }
 
+  /**
+   * Function to create the "Unlock All" button
+   */
   function createUnlockAllButton() {
     try {
       const targetElement = document.getElementById("init-links");
@@ -299,33 +308,33 @@
         const button = document.createElement("button");
         button.id = "unlock-all-button"; // Assign an ID
         button.classList.add("c-btn", "c-btn_style-1", "nav-links");
-  
+
         // Create a span element for the button text
         const buttonText = document.createElement("span");
         buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
-  
+
         // Create spinner element
         const spinner = document.createElement("span");
         spinner.classList.add("spinner");
         spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-  
+
         button.appendChild(buttonText);
         button.appendChild(spinner);
         targetElement.appendChild(button);
         console.log("Button inserted successfully");
-  
+
         // Function to update button content dynamically
         const updateButtonContent = () => {
           buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
         };
-  
+
         button.addEventListener("click", async () => {
           const originalWidth = button.offsetWidth; // Save original button width
           button.style.width = `${originalWidth}px`; // Set button width to its original width
           buttonText.style.display = "none"; // Hide button text
           spinner.classList.add("show"); // Show spinner
           button.disabled = true; // Disable the button
-  
+
           try {
             await unlockAllChapters();
           } catch (error) {
@@ -346,14 +355,20 @@
     }
   }
 
+  /**
+   * Function to limit concurrency of tasks
+   * @param {number} limit - The concurrency limit
+   * @param {Array<Function>} tasks - The tasks to execute
+   * @returns {Promise<Array>} The results of the tasks
+   */
   async function withConcurrencyLimit(limit, tasks) {
     const results = [];
     const executing = [];
-  
+
     for (const task of tasks) {
       const p = Promise.resolve().then(() => task());
       results.push(p);
-  
+
       if (limit <= tasks.length) {
         const e = p.then(() => executing.splice(executing.indexOf(e), 1));
         executing.push(e);
@@ -362,11 +377,13 @@
         }
       }
     }
-  
+
     return Promise.all(results);
   }
 
-  // Function to unlock all chapters
+  /**
+   * Function to unlock all chapters
+   */
   async function unlockAllChapters() {
     try {
       if (!checkBalance(totalCost)) {
@@ -380,10 +397,10 @@
       if (!userConfirmed) {
         return;
       }
-  
+
       const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
       const concurrencyLimit = 5;
-  
+
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
         try {
           const result = await unlockChapter(coin);
@@ -405,21 +422,31 @@
     }
   }
 
+  /**
+   * Function to auto unlock chapters
+   */
   function autoUnlockChapters() {
-      const chapterList = document.getElementById("manga-reading-nav-head");
-      const nextButton = document.getElementById("manga-reading-nav-foot").querySelector(".nav-next");
-      // Check if next button is premium
-      const CurrentChapter = chapterList.querySelectorAll("ol li.active")[0].textContent.trim();
-      const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
-      const selectedOption = selectElement.querySelector("option[selected='selected']");
+    // Cache frequently accessed elements
+    if (!chapterList) {
+      chapterList = document.getElementById("manga-reading-nav-head");
+    }
+    if (!nextButton) {
+      nextButton = document.getElementById("manga-reading-nav-foot").querySelector(".nav-next");
+    }
+    if (!selectElement) {
+      selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
+    }
+    if (!selectedOption) {
+      selectedOption = selectElement.querySelector("option[selected='selected']");
+    }
 
-      if (chapterList) {
-
-      }
-
+    // Check if next button is premium
+    const CurrentChapter = chapterList.querySelectorAll("ol li.active")[0].textContent.trim();
   }
-  
-  // Main initialization function
+
+  /**
+   * Main initialization function
+   */
   function init() {
     try {
       if (!window.location.pathname.includes("/chapter")) {
@@ -428,10 +455,10 @@
           console.error("Balance not found (Maybe not logged in?), stopping the script");
           return;
         }
-  
+
         GM_addStyle(GM_getResourceText("customCSS"));
         createUnlockAllButton();
-  
+
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             if (mutation.addedNodes.length || mutation.removedNodes.length) {
@@ -440,7 +467,7 @@
             }
           }
         });
-  
+
         const targetDiv = document.querySelector(getCachedSelector());
         if (targetDiv) {
           findAndLinkifyCoins();
