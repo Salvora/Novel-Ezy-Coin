@@ -127,16 +127,14 @@
    */
   function findAndLinkifyCoins() {
     try {
-      const coinElements = document.querySelectorAll(".premium-block .coin");
+      const coinElements = document.querySelectorAll(".premium-block .coin:not([data-listener-added])");
       console.log(`Found ${coinElements.length} coin elements`);
 
       coinElements.forEach((coin) => {
-        if (!coin.dataset.listenerAdded) {
           coin.addEventListener("click", handleCoinClick);
           coin.classList.add("c-btn-custom-1");
           coin.dataset.listenerAdded = true;
           console.log("Event listener added to coin elements");
-        }
       });
 
       totalCost = Array.from(coinElements)
