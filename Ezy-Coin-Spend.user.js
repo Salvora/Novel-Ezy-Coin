@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.4.2
+// @version     1.5.0
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.0.4#md5=f4028a3e478cd874668f80508c6af8ee
@@ -268,7 +268,7 @@
         console.error("Network response was not ok");
         return false;
       }
-      
+
       const data = await response.json();
       console.log("Successfully sent the request:", data);
       if (data.success && data.data.status) {
