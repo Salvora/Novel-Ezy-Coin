@@ -11,7 +11,7 @@
   z-index: 1000;
   font-family: Arial, sans-serif;
   font-size: 14px;
-  width: 150px;
+  width: 160px;
   overflow: hidden;
   transition: width 0.3s ease, padding 0.3s ease;
   display: flex;
@@ -20,7 +20,7 @@
 }
 
 .ezy-coin-settings:hover {
-  width: 300px;
+  width: 200px;
   padding: 10px;
 }
 
@@ -48,6 +48,21 @@
 
 .ezy-coin-settings input[type="checkbox"] {
   margin-right: 5px;
+}
+
+.ezy-coin-settings-structure {
+  display: flex;
+  flex-direction: column;
+}
+
+.auto-unlock-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.checkbox-input {
+  margin: 0;
 }
 
 .coin {

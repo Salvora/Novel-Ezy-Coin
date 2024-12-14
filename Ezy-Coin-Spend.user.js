@@ -7,6 +7,7 @@
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.0#md5=f4028a3e478cd874668f80508c6af8ee
+// @resource    SETTINGS_HTML ezy-coin-settings.html
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -34,7 +35,10 @@
 
   // Cache for selectors
   const selectorCache = new Map();
-
+  const SETTINGS = {
+    checkboxId: 'auto-unlock-checkbox',
+    templateUrl: 'ezy-coin-settings.html'
+};
   // Add debounce utility near top of script after variables
   const debounce = (fn, delay) => {
     let timeoutId;
@@ -61,50 +65,19 @@
 
   // Function to create the settings UI
   function createSettingsUI() {
-    // Create a container for settings
-    const settingsContainer = document.createElement('div');
-    settingsContainer.id = 'ezy-coin-settings';
-    settingsContainer.classList.add('ezy-coin-settings'); // Add the CSS class
-  
-    // Create a title for the settings
-    const settingsTitle = document.createElement('div');
-    settingsTitle.classList.add('ezy-coin-settings-title');
-    settingsTitle.textContent = 'Ezy-Coin Settings';
-  
-    // Create a content container for the settings
-    const settingsContent = document.createElement('div');
-    settingsContent.classList.add('ezy-coin-settings-content');
-  
-    // Create a checkbox for auto-unlock
-    const autoUnlockLabel = document.createElement('label');
-    autoUnlockLabel.htmlFor = 'auto-unlock-checkbox';
-  
-    const autoUnlockCheckbox = document.createElement('input');
-    autoUnlockCheckbox.type = 'checkbox';
-    autoUnlockCheckbox.id = 'auto-unlock-checkbox';
-  
-    autoUnlockLabel.appendChild(autoUnlockCheckbox);
-    autoUnlockLabel.appendChild(document.createTextNode('Enable Auto-Unlock'));
-  
-    settingsContent.appendChild(autoUnlockLabel);
-  
-    // Append the title and content to the settings container
-    settingsContainer.appendChild(settingsTitle);
-    settingsContainer.appendChild(settingsContent);
-  
-    // Append the settings container to the body
-    document.body.appendChild(settingsContainer);
-  
-    // Load the saved setting
-    GM_getValue('autoUnlock', false).then((value) => {
-      autoUnlock = value;
-      autoUnlockCheckbox.checked = autoUnlock;
-    });
-  
-    // Add event listener to the checkbox
-    autoUnlockCheckbox.addEventListener('change', (event) => {
-      autoUnlock = event.target.checked;
-      GM_setValue('autoUnlock', autoUnlock);
+    const template = GM_getResourceText(SETTINGS.resourceName);
+
+    const container = document.createElement('div');
+    container.innerHTML = template;
+    document.body.appendChild(container.firstElementChild);
+
+    const checkbox = document.getElementById(SETTINGS.checkboxId);
+    GM_getValue('autoUnlock', false).then(value => {
+        autoUnlock = checkbox.checked = value;
+        checkbox.addEventListener('change', e => {
+            autoUnlock = e.target.checked;
+            GM_setValue('autoUnlock', autoUnlock);
+        });
     });
   }
 
