@@ -327,7 +327,7 @@
         coin.removeEventListener('click', handleCoinClick);
 
         // Call findAndLinkifyCoins to update the total cost and button text
-        findAndLinkifyCoins();
+        debouncedFindAndLinkifyCoins();
       } else {
         console.error("Failed to buy chapter:", data.data.message);
         coin.disabled = false; // Re-enable the coin element if the request fails
@@ -509,7 +509,7 @@
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             if (mutation.addedNodes.length || mutation.removedNodes.length) {
-              findAndLinkifyCoins(); // Use debounced version
+              debouncedFindAndLinkifyCoins(); // Use debounced version
               break;
             }
           }
@@ -525,7 +525,7 @@
         });
         const targetDiv = document.querySelector(getCachedSelector());
         if (targetDiv) {
-          findAndLinkifyCoins(); // Use debounced version
+          debouncedFindAndLinkifyCoins(); // Use debounced version
           observer.observe(targetDiv, { childList: true, subtree: true });
         } else {
           console.error("Target div not found");
