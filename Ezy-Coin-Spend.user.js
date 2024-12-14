@@ -70,12 +70,12 @@
     document.body.appendChild(container.firstElementChild);
 
     const checkbox = document.getElementById(SETTINGS.checkboxId);
-    GM_getValue('autoUnlock', false).then(value => {
-        autoUnlock = checkbox.checked = value;
-        checkbox.addEventListener('change', e => {
-            autoUnlock = e.target.checked;
-            GM_setValue('autoUnlock', autoUnlock);
-        });
+    const autoUnlock = GM_getValue('autoUnlock', false);
+    checkbox.checked = autoUnlock;
+
+    checkbox.addEventListener('change', e => {
+        const autoUnlock = e.target.checked;
+        GM_setValue('autoUnlock', autoUnlock);
     });
   }
 
@@ -496,16 +496,14 @@
    */
   function init() {
     try {
+      balance = getBalance();
+      if (balance === 0) {
+        console.error("Balance not found (Maybe not logged in?), stopping the script");
+        return;
+      }
+      GM_addStyle(GM_getResourceText("customCSS"));
       if (!window.location.pathname.includes("/chapter")) {
-        balance = getBalance();
-        if (balance === 0) {
-          console.error("Balance not found (Maybe not logged in?), stopping the script");
-          return;
-        }
-
-        GM_addStyle(GM_getResourceText("customCSS"));
         createUnlockAllButton();
-
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             if (mutation.addedNodes.length || mutation.removedNodes.length) {
@@ -531,12 +529,13 @@
           console.error("Target div not found");
         }
       } else {
-        console.log("Script is not running on a series page");
+        console.log("Coin unlocking is not running on a chapter page");
       }
     } catch (error) {
       console.error("Error during initialization:", error);
     } finally {
       try {
+        console.log("Creating UI for settings");
         createSettingsUI();
       } catch (error) {
         console.error("Error creating Settings UI block:", error);
