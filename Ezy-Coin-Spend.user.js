@@ -264,6 +264,11 @@
         body: postData.toString(),
       });
 
+      if (!response.ok) {
+        console.error("Network response was not ok");
+        return false;
+      }
+      
       const data = await response.json();
       console.log("Successfully sent the request:", data);
       if (data.success && data.data.status) {
