@@ -54,6 +54,11 @@ Once installed, the script will automatically run on the supported sites. You ca
 
 This script is designed to prevent spending more than required. Please, report any oversights. (I wasted a lot of coins to prevent double spending.) 
 
+## TO DO
+
+- Make balance calculation dynamic
+- Auto-unlocking
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request on [GitHub](https://github.com/Salvora/Novel-Ezy-Coin).
