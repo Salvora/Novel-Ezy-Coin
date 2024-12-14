@@ -14,6 +14,9 @@
   width: 150px;
   overflow: hidden;
   transition: width 0.3s ease, padding 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .ezy-coin-settings:hover {
@@ -24,10 +27,12 @@
 .ezy-coin-settings-title {
   font-weight: bold;
   cursor: pointer;
+  text-align: center;
 }
 
 .ezy-coin-settings-content {
   display: none;
+  width: 100%;
 }
 
 .ezy-coin-settings:hover .ezy-coin-settings-content {
@@ -38,6 +43,7 @@
   display: block;
   margin-bottom: 5px;
   cursor: pointer;
+  text-align: center;
 }
 
 .ezy-coin-settings input[type="checkbox"] {

@@ -69,7 +69,7 @@
     // Create a title for the settings
     const settingsTitle = document.createElement('div');
     settingsTitle.classList.add('ezy-coin-settings-title');
-    settingsTitle.textContent = 'Settings';
+    settingsTitle.textContent = 'Ezy-Coin Settings';
   
     // Create a content container for the settings
     const settingsContent = document.createElement('div');
