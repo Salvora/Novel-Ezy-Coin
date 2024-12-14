@@ -1,20 +1,65 @@
 /* styles.css */
+.ezy-coin-settings {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 5px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  width: 150px;
+  overflow: hidden;
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.ezy-coin-settings:hover {
+  width: 300px;
+  padding: 10px;
+}
+
+.ezy-coin-settings-title {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.ezy-coin-settings-content {
+  display: none;
+}
+
+.ezy-coin-settings:hover .ezy-coin-settings-content {
+  display: block;
+}
+
+.ezy-coin-settings label {
+  display: block;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.ezy-coin-settings input[type="checkbox"] {
+  margin-right: 5px;
+}
+
 .coin {
-    transition: transform 0.1s ease;
+  transition: transform 0.1s ease;
 }
 
 .coin.clicked {
-    transform: scale(0.90);
+  transform: scale(0.90);
 }
 
 .c-btn:hover {
-    background-color: black !important;
-    color: white !important;
+  background-color: black !important;
+  color: white !important;
 }
 
 .c-btn:active {
-    transform: scale(0.95);
-    background-color: #333333 !important;
+  transform: scale(0.95);
+  background-color: #333333 !important;
 }
 
 .c-btn-custom-1 {
@@ -44,12 +89,12 @@
 }
 
 .c-btn-custom-1:hover {
-    background-color: blue !important;
-    color: white !important;
+  background-color: blue !important;
+  color: white !important;
 }
 .c-btn-custom-1:active {
-    transform: scale(0.95);
-    background-color: #333333 !important;
+  transform: scale(0.95);
+  background-color: #333333 !important;
 }
 
 .flash-red {
