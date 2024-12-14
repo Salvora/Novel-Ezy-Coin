@@ -538,7 +538,7 @@
     } finally {
       try {
         console.log("Creating UI for settings");
-        createSettingsUI();
+        // createSettingsUI();
       } catch (error) {
         console.error("Error creating Settings UI block:", error);
       }
