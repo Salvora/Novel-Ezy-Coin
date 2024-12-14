@@ -467,11 +467,22 @@
 
         GM_addStyle(GM_getResourceText("customCSS"));
         createUnlockAllButton();
+        
+        // Add debounce utility near top of script after variables
+        const debounce = (fn, delay) => {
+          let timeoutId;
+          return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn.apply(null, args), delay);
+          };
+        };
+        // Create debounced version of findAndLinkifyCoins
+        const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
 
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             if (mutation.addedNodes.length || mutation.removedNodes.length) {
-              findAndLinkifyCoins();
+              debouncedFindAndLinkifyCoins(); // Use debounced version
               break;
             }
           }
@@ -483,11 +494,11 @@
             observer.disconnect();
             observer = null;
           }
-          
+
         });
         const targetDiv = document.querySelector(getCachedSelector());
         if (targetDiv) {
-          findAndLinkifyCoins();
+          debouncedFindAndLinkifyCoins(); // Use debounced version
           observer.observe(targetDiv, { childList: true, subtree: true });
         } else {
           console.error("Target div not found");
