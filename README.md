@@ -58,6 +58,7 @@ This script is designed to prevent spending more than required. Please, report a
 
 - Make balance calculation dynamic
 - Auto-unlocking
+- Check chapter lock status before unlocking to prevent double spending when the tab is not refreshed
 
 ## Contributing
 
