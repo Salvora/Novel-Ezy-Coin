@@ -207,6 +207,10 @@
    * @returns {Promise<boolean>} True if the chapter was unlocked successfully, false otherwise
    */
   async function unlockChapter(coin) {
+    if (!coin || !(coin instanceof Element)) {
+      console.error("Invalid coin element");
+      return false;
+    }
     const chapterElement = coin.closest(".wp-manga-chapter");
     const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
     const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
