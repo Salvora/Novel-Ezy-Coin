@@ -472,12 +472,28 @@
 
   /**
    * Function to auto unlock chapters
+   * To Do
+   * check if it is the last chapter
+   * find the current chapter and check for next chapter
+   * check if the next chapter is locked
+   * unlock the next chapter if locked
    */
   function autoUnlockChapters() {
     const chapterList = document.getElementById("manga-reading-nav-head");
-    const nextButton = document.getElementById("manga-reading-nav-foot")?.querySelector(".nav-next");
     const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
+
+    const nextButton = document.getElementById("manga-reading-nav-foot")?.querySelector(".nav-next");
     
+    const chapterElement = nextButton.closest(".wp-manga-chapter");
+    const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
+    const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
+
+    const postData = new URLSearchParams({
+      action: "wp_manga_buy_chapter",
+      chapter: chapterIdMatch[1],
+      nonce: nonceElement.value,
+    });
+
     if (!chapterList || !nextButton || !selectElement) {
       console.error("Required elements for auto unlock not found");
       return false;
