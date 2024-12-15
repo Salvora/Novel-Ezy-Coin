@@ -53,12 +53,24 @@
    * @returns {string} The selector for the current site
    */
   function getSelector() {
-    const SiteSelectors = {
+    const siteSelector = {
       "https://darkstartranslations.com": "#manga-chapters-holder",
       "https://hiraethtranslation.com": ".page-content-listing.single-page",
     };
     const url = window.location.origin;
-    return SiteSelectors[url];
+    return siteSelector[url];
+  }
+
+  /**
+   * Function to get cached selector
+   * @returns {string} The cached selector for the current site
+   */
+  function getCachedSelector() {
+    const url = window.location.origin;
+    if (!selectorCache.has(url)) {
+      selectorCache.set(url, getSelector());
+    }
+    return selectorCache.get(url);
   }
 
   // Function to create the settings UI
@@ -79,18 +91,6 @@
     });
   }
 
-
-  /**
-   * Function to get cached selector
-   * @returns {string} The cached selector for the current site
-   */
-  function getCachedSelector() {
-    const url = window.location.origin;
-    if (!selectorCache.has(url)) {
-      selectorCache.set(url, getSelector());
-    }
-    return selectorCache.get(url);
-  }
 
   /**
    * Function to get the user's balance
