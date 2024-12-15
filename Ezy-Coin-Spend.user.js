@@ -270,21 +270,12 @@
       nonce: nonceElement.value,
     });
 
-    const fetchWithTimeout = (url, options, timeout = 5000) => {
-      return Promise.race([
-        fetch(url, options),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timed out')), timeout)
-        )
-      ]);
-    };
-
     try {
-      const response = await fetchWithTimeout(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+      const response = await sendRequest(`${window.location.origin}/wp-admin/admin-ajax.php`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
         },
         body: postData.toString(),
       });
@@ -344,6 +335,15 @@
       coin.removeChild(spinner); // Remove spinner element
     }
     return true;
+  }
+
+  async function sendRequest(url, options, timeout = 5000) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timed out')), timeout)
+        )
+    ]);
   }
 
   /**
