@@ -295,7 +295,12 @@
       console.log("Successfully sent the request:", data);
       if (data.success && data.data.status) {
         // Update the balance element
-        updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
+        try {
+          // Attempt to update the balance
+          updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
+        } catch (error) {
+          console.error('Error calling updateBalance:', error);
+        }
 
         // Remove the premium-block class from the chapter element
         chapterElement.classList.remove("premium-block");
