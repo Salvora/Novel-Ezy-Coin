@@ -128,7 +128,10 @@
     }
     balance = Math.max(0, balance - delta); // Prevent negative balance
     if (balanceElement) {
-      balanceElement.textContent = `Balance: ${balance.toLocaleString()}`;
+      const balanceTextNode = balanceElement.childNodes[balanceElement.childNodes.length - 1];
+      if (balanceTextNode.nodeType === Node.TEXT_NODE) {
+        balanceTextNode.textContent = ` ${balance.toLocaleString()}`;
+      }
     }
   }
 
