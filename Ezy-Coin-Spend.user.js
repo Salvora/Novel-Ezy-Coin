@@ -122,16 +122,19 @@
    * @param {number} delta - The amount to subtract from the balance
    */
   function updateBalance(delta) {
-    if (typeof delta !== 'number' || isNaN(delta)) {
-      console.error('Invalid delta value for balance update');
-      return;
-    }
-    balance = Math.max(0, balance - delta); // Prevent negative balance
-    if (balanceElement) {
-      const balanceTextNode = balanceElement.childNodes[balanceElement.childNodes.length - 1];
-      if (balanceTextNode.nodeType === Node.TEXT_NODE) {
-        balanceTextNode.textContent = ` ${balance.toLocaleString()}`;
+    try {
+      if (typeof delta !== 'number' || isNaN(delta)) {
+        throw new Error('Invalid delta value for balance update');
       }
+      balance = Math.max(0, balance - delta); // Prevent negative balance
+      if (balanceElement) {
+        const balanceTextNode = balanceElement.childNodes[balanceElement.childNodes.length - 1];
+        if (balanceTextNode.nodeType === Node.TEXT_NODE) {
+          balanceTextNode.textContent = ` ${balance.toLocaleString()}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error);
     }
   }
 
