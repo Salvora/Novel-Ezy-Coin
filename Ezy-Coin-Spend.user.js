@@ -25,11 +25,12 @@
   "use strict";
   const processingCoins = new Set(); // Set to track coins being processed
 
-  let balanceElement = null; // Variable to store the balance element
   let balance = 0; // Variable to store the balance value
   let totalCost = 0; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
-  let autoUnlock = false; // Variable to store the auto unlock status
+  let autoUnlockSetting = false; // Variable to store the auto unlock status
+  let balanceLock = false; // Lock to ensure atomic balance updates
+
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -91,26 +92,58 @@
     });
   }
 
+  /**
+   * Validates document structure
+   * @param {Document} doc Document to validate
+   * @returns {boolean} True if valid
+   */
+  function isValidDocument(doc) {
+    return doc?.querySelector(".c-user_menu") !== null;
+  }
 
   /**
-   * Function to get the user's balance
-   * @returns {number} The user's balance
+   * Parses HTML content and validates document
+   * @param {string} content HTML content
+   * @returns {Document|null} Parsed document or null
    */
-  function getBalance() {
+  function parseHTML(content) {
     try {
-      balanceElement = document.querySelector(".c-user_menu li:first-child a");
-      if (balanceElement) {
-        const balanceText = balanceElement.textContent;
-        const balanceMatch = balanceText.match(/Balance:\s*([\d,]+)/);
-        if (balanceMatch) {
-          const balanceString = balanceMatch[1].replace(/,/g, '');
-          const parsedBalance = parseInt(balanceString, 10);
-          return isNaN(parsedBalance) ? 0 : parsedBalance;
-        }
-      } else {
-      console.error("Balance element not found or invalid format");
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(content, 'text/html');
+      return isValidDocument(doc) ? doc : null;
+    } catch (error) {
+      console.error('Error parsing HTML:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Gets the user's balance from document
+   * @param {Document} doc Document to search
+   * @returns {number} User's balance
+   */
+  function getBalance(doc) {
+    if (!doc || !(doc instanceof Document)) {
+      console.error("Invalid document provided");
       return 0;
+    }
+
+    try {
+      const balanceElement = doc.querySelector(".c-user_menu li:first-child a");
+      if (!balanceElement) {
+        console.error("Balance element not found");
+        return 0;
       }
+
+      const balanceText = balanceElement.textContent.trim();
+      const balanceMatch = balanceText.match(/Balance:\s*([\d,]+)/);
+      if (!balanceMatch) {
+        console.error("Invalid balance format");
+        return 0;
+      }
+
+      const parsedBalance = parseInt(balanceMatch[1].replace(/,/g, ''), 10);
+      return isNaN(parsedBalance) ? 0 : parsedBalance;
     } catch (error) {
       console.error("Error getting balance:", error);
       return 0;
@@ -118,37 +151,110 @@
   }
 
   /**
+   * Gets dynamic user balance from user-settings page
+   * @returns {Promise<number>} User's current balance
+   */
+  async function getDynamicBalance() {
+    const TIMEOUT_MS = 10000;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      const response = await sendRequest(
+        `${window.location.origin}/user-settings`,
+        { method: 'GET', signal: controller.signal },
+        TIMEOUT_MS
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let content = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        
+        if (done) {
+          const doc = parseHTML(content + decoder.decode());
+          return doc ? getBalance(doc) : 0;
+        }
+
+        content += decoder.decode(value, { stream: true });
+        
+        if (content.includes('Balance:')) {
+          controller.abort();
+          const doc = parseHTML(content);
+          return doc ? getBalance(doc) : 0;
+        }
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Request aborted: timeout or balance found');
+      } else {
+        console.error('Error fetching balance:', error);
+      }
+      return 0;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  /**
    * Function to update the user's balance
    * @param {number} delta - The amount to subtract from the balance
    */
-  function updateBalance(delta) {
+  async function updateBalance(delta) {
+    while (balanceLock) {
+      await new Promise(resolve => setTimeout(resolve, 10)); // Wait for the lock to be released
+    }
+    balanceLock = true; // Acquire the lock
+  
     try {
       if (typeof delta !== 'number' || isNaN(delta)) {
         throw new Error('Invalid delta value for balance update');
       }
       balance = Math.max(0, balance - delta); // Prevent negative balance
+      const balanceElement = document.querySelector(".c-user_menu li:first-child a");
       if (balanceElement) {
+        console.log('Updating UI with new Balance:', balance);
         const balanceTextNode = balanceElement.childNodes[balanceElement.childNodes.length - 1];
         if (balanceTextNode.nodeType === Node.TEXT_NODE) {
           balanceTextNode.textContent = ` ${balance.toLocaleString()}`;
+        } else {
+          balanceElement.textContent = ` ${balance.toLocaleString()}`;
         }
+      } else {
+        console.error('Balance element not found');
       }
     } catch (error) {
       console.error('Error updating balance:', error);
+    } finally {
+      balanceLock = false; // Release the lock
     }
   }
 
   /**
    * Function to check if the user has enough balance
    * @param {number} cost - The cost to check against the balance
-   * @returns {boolean} True if the user has enough balance, false otherwise
+   * @returns {Promise<boolean>} True if the user has enough balance, false otherwise
    */
-  function checkBalance(cost) {
-    if (cost > balance) {
-      console.error("Balance is not enough for purchasing the chapter!!!");
+  async function checkBalance(cost) {
+    try {
+      console.log("Checking balance for cost:", cost);
+      balance = await getDynamicBalance();
+      if (cost > balance) {
+        console.error(`Balance: ${balance} is not enough for purchasing the chapter with cost: ${cost} !!!`);
+        return false;
+      }
+      console.log(`Balance: ${balance} is enough for purchasing the chapter(s) with cost: ${cost}`);
+      return true;
+    } catch (error) {
+      console.error("Error checking balance:", error);
       return false;
     }
-    return true;
   }
 
   /**
@@ -186,20 +292,40 @@
   }
 
   /**
+   * Function to show or hide a spinner on an element
+   * @param {HTMLElement} element - The element to show or hide the spinner on
+   * @param {boolean} show - Whether to show or hide the spinner
+   */
+  function elementSpinner(element, show) {
+    let spinner = element.querySelector(".spinner");
+
+    if (show) {
+      if (!spinner) {
+        // Create spinner element if it doesn't exist
+        spinner = document.createElement("span");
+        spinner.classList.add("spinner");
+        spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+        element.appendChild(spinner);
+      }
+      spinner.classList.add("show"); // Show spinner
+    } else {
+      if (spinner) {
+        spinner.classList.remove("show"); // Hide spinner
+        element.removeChild(spinner); // Remove spinner element
+      }
+    }
+  }
+
+  /**
    * Function to handle the click event on a coin
    * @param {Event} event - The click event
    */
   async function handleCoinClick(event) {
     event.preventDefault();
     const coin = event.currentTarget;
-    const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ''), 10);
-
+    
     if (processingCoins.has(coin)) {
       console.log("Coin is already being processed, ignoring click");
-      return;
-    }
-    if (!checkBalance(chapterCoinCost)) {
-      flashCoin(coin);
       return;
     }
 
@@ -208,8 +334,20 @@
     coin.classList.add("clicked");
     console.log("Coin clicked");
 
+    // Temporarily disconnect the observer
+    if (observer) {
+      observer.disconnect();
+    }
+
     try {
       setTimeout(() => coin.classList.remove("clicked"), 100);
+      const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ''), 10);
+      elementSpinner(coin, true);
+      if (!(await checkBalance(chapterCoinCost))) {
+        flashCoin(coin);
+        elementSpinner(coin, false);
+        return;
+      }
       const result = await unlockChapter(coin);
       if (!result) {
         flashCoin(coin);
@@ -221,6 +359,14 @@
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
       coin.disabled = false; // Re-enable the coin element
+      elementSpinner(coin, false);
+      // Reconnect the observer
+      if (observer) {
+        const targetDiv = document.querySelector(getCachedSelector());
+        if (targetDiv) {
+          observer.observe(targetDiv, { childList: true, subtree: true });
+        }
+      }
     }
   }
 
@@ -263,12 +409,7 @@
       return false;
     }
 
-    // Create spinner element
-    const spinner = document.createElement("span");
-    spinner.classList.add("spinner");
-    spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-    coin.appendChild(spinner);
-    spinner.classList.add("show"); // Show spinner
+    elementSpinner(coin, true);
 
     const postData = new URLSearchParams({
       action: "wp_manga_buy_chapter",
@@ -297,7 +438,7 @@
         // Update the balance element
         try {
           // Attempt to update the balance
-          updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
+          await updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
         } catch (error) {
           console.error('Error calling updateBalance:', error);
         }
@@ -342,18 +483,26 @@
       return false;
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
-      spinner.classList.remove("show"); // Hide spinner
-      coin.removeChild(spinner); // Remove spinner element
+      elementSpinner(coin, false);
     }
     return true;
   }
 
-  async function sendRequest(url, options, timeout = 5000) {
+  /**
+   * Send HTTP request with timeout
+   * @param {string} url - The URL to send the request to
+   * @param {Object} options - Request options
+   * @param {number} [timeout=10000] - Timeout in milliseconds
+   * @returns {Promise<Response>} Fetch response
+   */
+  async function sendRequest(url, options = {}, timeout = 10000) {
+    const { signal, ...fetchOptions } = options;
+
     return Promise.race([
-        fetch(url, options),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Request timed out')), timeout)
-        )
+      fetch(url, { ...fetchOptions, signal }),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), timeout)
+      )
     ]);
   }
 
@@ -372,13 +521,8 @@
         const buttonText = document.createElement("span");
         buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
 
-        // Create spinner element
-        const spinner = document.createElement("span");
-        spinner.classList.add("spinner");
-        spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
-
         button.appendChild(buttonText);
-        button.appendChild(spinner);
+        elementSpinner(button, false);
         targetElement.appendChild(button);
         console.log("Button inserted successfully");
 
@@ -391,7 +535,7 @@
           const originalWidth = button.offsetWidth; // Save original button width
           button.style.width = `${originalWidth}px`; // Set button width to its original width
           buttonText.style.display = "none"; // Hide button text
-          spinner.classList.add("show"); // Show spinner
+          elementSpinner(button, true); // Show spinner
           button.disabled = true; // Disable the button
 
           try {
@@ -399,7 +543,7 @@
           } catch (error) {
             console.error("Error unlocking all chapters:", error);
           } finally {
-            spinner.classList.remove("show"); // Hide spinner
+            elementSpinner(button, false); // Hide spinner
             updateButtonContent(); // Restore original button content dynamically
             buttonText.style.display = "inline"; // Show button text
             button.style.width = 'auto'; // Reset button width to auto
@@ -445,7 +589,7 @@
    */
   async function unlockAllChapters() {
     try {
-      if (!checkBalance(totalCost)) {
+      if (!(await checkBalance(totalCost))) {
         alert("Balance is not enough to unlock all chapters!");
         return;
       }
@@ -490,6 +634,10 @@
    * unlock the next chapter if locked
    */
   function autoUnlockChapters() {
+    if (!autoUnlockSetting) {
+      console.log("Auto unlock setting is disabled");
+      return false;
+    }
     const chapterList = document.getElementById("manga-reading-nav-head");
     const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
 
@@ -525,7 +673,7 @@
    */
   function init() {
     try {
-      balance = getBalance();
+      balance = getBalance(document);
       if (balance === 0) {
         console.error("Balance not found (Maybe not logged in?), stopping the script");
         return;
