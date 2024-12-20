@@ -30,7 +30,8 @@
   let observer; // Define the observer globally
   let autoUnlockSetting = false; // Variable to store the auto unlock status
   let balanceLock = false; // Lock to ensure atomic balance updates
-  let chapterPageKeywordList = ["chapter", "manga", "novel"]; // List of keywords to identify chapter pages
+  const chapterPageKeywordList = ["chapter", "manga", "novel"]; // List of keywords to identify chapter pages
+  const concurrencyLimit = 10; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -601,7 +602,7 @@
       }
 
       const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
-      const concurrencyLimit = 5;
+      
 
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
         try {
