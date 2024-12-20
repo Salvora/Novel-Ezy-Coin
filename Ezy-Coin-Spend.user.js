@@ -30,7 +30,7 @@
   let observer; // Define the observer globally
   let autoUnlockSetting = false; // Variable to store the auto unlock status
   let balanceLock = false; // Lock to ensure atomic balance updates
-
+  let chapterPageKeywordList = ["chapter", "manga", "novel"]; // List of keywords to identify chapter pages
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -75,20 +75,20 @@
   }
 
   // Function to create the settings UI
-  function createSettingsUI() {
+  function settingsUI() {
     const template = GM_getResourceText(SETTINGS.resourceName);
-
+  
     const container = document.createElement('div');
     container.innerHTML = template;
     document.body.appendChild(container.firstElementChild);
-
+  
     const checkbox = document.getElementById(SETTINGS.checkboxId);
-    const autoUnlock = GM_getValue('autoUnlock', false);
-    checkbox.checked = autoUnlock;
-
+    autoUnlockSetting = GM_getValue('autoUnlock', false); // Initialize the variable
+    checkbox.checked = autoUnlockSetting;
+  
     checkbox.addEventListener('change', e => {
-        const autoUnlock = e.target.checked;
-        GM_setValue('autoUnlock', autoUnlock);
+      autoUnlockSetting = e.target.checked; // Update the variable
+      GM_setValue('autoUnlock', autoUnlockSetting);
     });
   }
 
@@ -345,7 +345,6 @@
       elementSpinner(coin, true);
       if (!(await checkBalance(chapterCoinCost))) {
         flashCoin(coin);
-        elementSpinner(coin, false);
         return;
       }
       const result = await unlockChapter(coin);
@@ -679,7 +678,8 @@
         return;
       }
       GM_addStyle(GM_getResourceText("customCSS"));
-      if (!window.location.pathname.includes("/chapter")) {
+      const isChapterPage = chapterPageKeywordList.some(keyword => window.location.pathname.includes(`/${keyword}`));
+      if (!isChapterPage) {
         createUnlockAllButton();
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
@@ -713,7 +713,7 @@
     } finally {
       try {
         console.log("Creating UI for settings");
-        // createSettingsUI();
+        settingsUI();
       } catch (error) {
         console.error("Error creating Settings UI block:", error);
       }
