@@ -590,7 +590,7 @@
   async function unlockAllChapters() {
     try {
       if (!(await checkBalance(totalCost))) {
-        alert("Balance is not enough to unlock all chapters!");
+        alert(`Balance (${balance}) is not enough to unlock all chapters! (${totalCost})`);
         return;
       }
       if (totalCost === 0) {
