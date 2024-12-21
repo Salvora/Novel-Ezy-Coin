@@ -596,7 +596,13 @@
       if (totalCost === 0) {
         return;
       }
-      const userConfirmed = confirm(`You are about to spend ${totalCost} coins to unlock all chapters. Do you want to proceed?`);
+      const userConfirmed = confirm(
+        `You are about to spend ${totalCost} coins to unlock all chapters.
+      Current Balance: ${balance}
+      Calculated New Balance: ${balance - totalCost}
+      Do you want to proceed?`
+      );
+
       if (!userConfirmed) {
         return;
       }
