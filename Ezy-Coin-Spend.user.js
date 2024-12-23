@@ -471,6 +471,7 @@
 
         // Call findAndLinkifyCoins to update the total cost and button text
         debouncedFindAndLinkifyCoins();
+        return true;
       } else {
         console.error("Failed to buy chapter:", data.data.message);
         coin.disabled = false; // Re-enable the coin element if the request fails
@@ -485,7 +486,6 @@
       processingCoins.delete(coin); // Remove coin from the set
       elementSpinner(coin, false);
     }
-    return true;
   }
 
   /**
