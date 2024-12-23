@@ -565,20 +565,25 @@
    * @returns {Promise<Array>} The results of the tasks
    */
   async function withConcurrencyLimit(limit, tasks) {
+    if (limit === 0) {
+      // If limit is 0, execute all tasks at once
+      const promises = tasks.map(task => task());
+      return Promise.all(promises);
+    }
+
     const results = [];
     const executing = [];
 
     for (const task of tasks) {
-      const p = Promise.resolve().then(() => task());
+      const p = task();
       results.push(p);
 
-      if (limit <= tasks.length) {
-        const e = p.then(() => executing.splice(executing.indexOf(e), 1));
-        executing.push(e);
-        if (executing.length >= limit) {
-          await Promise.race(executing);
-        }
+      if (executing.length >= limit) {
+        await Promise.race(executing);
       }
+
+      const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+      executing.push(e);
     }
 
     return Promise.all(results);
