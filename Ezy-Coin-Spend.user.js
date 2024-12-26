@@ -28,7 +28,7 @@
   let balance = 0; // Variable to store the balance value
   let totalCost = 0; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
-  let autoUnlockSetting = false; // Variable to store the auto unlock status
+  let autoUnlockSetting = false; // Variable to activate/deactivate the auto unlock functionality from Settings UI
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
