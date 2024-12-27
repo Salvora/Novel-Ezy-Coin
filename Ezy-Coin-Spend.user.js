@@ -8,7 +8,7 @@
 // @grant       GM_getValue
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.0
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
-// @resource    siteConfig https://your-server.com/path/to/siteConfig.json?v=1.0.0
+// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.0
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -32,7 +32,7 @@
   let autoUnlockSetting = false; // Variable to activate/deactivate the auto unlock functionality from Settings UI
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  const concurrencyLimit = 0; // Limit the number of concurrent unlock requests
+  const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
