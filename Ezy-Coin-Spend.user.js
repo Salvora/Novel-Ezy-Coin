@@ -8,6 +8,7 @@
 // @grant       GM_getValue
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.0
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
+// @resource    siteConfig https://your-server.com/path/to/siteConfig.json?v=1.0.0
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -25,7 +26,6 @@
 (function () {
   "use strict";
   const processingCoins = new Set(); // Set to track coins being processed
-
   let balance = null; // Variable to store the balance value
   let totalCost = null; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
@@ -39,7 +39,10 @@
   const SETTINGS = {
     checkboxId: 'auto-unlock-checkbox',
     resourceName: 'SETTINGS_HTML'
-};
+  };
+
+  const siteConfig = JSON.parse(GM_getResourceText('siteConfig'));
+
   // Add debounce utility near top of script after variables
   const debounce = (fn, delay) => {
     let timeoutId;
@@ -50,31 +53,74 @@
   };
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
 
+
   /**
-       * Function to get the appropriate chapter list selector based on the current URL with caching
-       * @param {string} url - The URL of the current site
-       * @returns {string} The selector for the current site
-       */
+   * Function to get the appropriate chapter list selector based on the current URL with caching
+   * @param {string} url - The URL of the current site
+   * @returns {object} The selector for the current site
+   */
   function getSelector(url) {
-    const siteSelector = {
-      "https://darkstartranslations.com": {
-        chapterList: "#manga-chapters-holder",
-        buttonLocation: "#init-links"
-      },
-      "https://luminarynovels.com": {
-        chapterList: "#manga-chapters-holder",
-        buttonLocation: "#init-links"
-      },
-      "https://hiraethtranslation.com": {
-        chapterList: ".page-content-listing.single-page",
-        buttonLocation: "#init-links"
-      },
-    };
     if (!selectorCache.has(url)) {
-      selectorCache.set(url, siteSelector[url]);
+      selectorCache.set(url, siteConfig[url]);
     }
     return selectorCache.get(url);
   }
+
+  // /**
+  //      * Function to get the appropriate chapter list selector based on the current URL with caching
+  //      * @param {string} url - The URL of the current site
+  //      * @returns {string} The selector for the current site
+  //      */
+  // function getSelector(url) {
+  //   const siteSelector = {
+  //     "https://darkstartranslations.com": {
+  //       chapterList: "#manga-chapters-holder",
+  //       buttonLocation: "#init-links",
+  //       balancePlaceholder: ".c-user_menu li:first-child a",
+  //       balanceString: "Balance:",
+  //       balanceRegex: /Balance:\s*([\d,]+)/,
+  //       coinPage: "https://darkstartranslations.com/user-settings",
+  //       coinPlaceholder: ".c-user_menu",
+  //       premiumChapterIndicator: ".premium-block .coin",
+  //       premiumIndicator: ".premium-block",
+  //       noncePlaceholder: "input[name='wp-manga-coin-nonce']",
+  //       unlockRequestURL: "https://darkstartranslations.com/wp-admin/admin-ajax.php",
+  //       unlockAction: "wp_manga_buy_chapter",
+  //     },
+  //     "https://luminarynovels.com": {
+  //       chapterList: "#manga-chapters-holder",
+  //       buttonLocation: "#init-links",
+  //       balancePlaceholder: ".c-user_menu li:first-child a",
+  //       balanceString: "Balance:",
+  //       balanceRegex: /Balance:\s*([\d,]+)/,
+  //       coinPage: "https://luminarynovels.com/user-settings",
+  //       coinPlaceholder: ".c-user_menu",
+  //       premiumChapterIndicator: ".premium-block .coin",
+  //       premiumIndicator: ".premium-block",
+  //       noncePlaceholder: "input[name='wp-manga-coin-nonce']",
+  //       unlockRequestURL: "https://luminarynovels.com/wp-admin/admin-ajax.php",
+  //       unlockAction: "wp_manga_buy_chapter",
+  //     },
+  //     "https://hiraethtranslation.com": {
+  //       chapterList: ".page-content-listing.single-page",
+  //       buttonLocation: "#init-links",
+  //       balancePlaceholder: ".c-user_menu li:first-child a",
+  //       balanceString: "Balance:",
+  //       balanceRegex: /Balance:\s*([\d,]+)/,
+  //       coinPage: "https://hiraethtranslation.com/user-settings",
+  //       coinPlaceholder: ".c-user_menu",
+  //       premiumChapterIndicator: ".premium-block .coin",
+  //       premiumIndicator: ".premium-block",
+  //       noncePlaceholder: "input[name='wp-manga-coin-nonce']",
+  //       unlockRequestURL: "https://hiraethtranslation.com/wp-admin/admin-ajax.php",
+  //       unlockAction: "wp_manga_buy_chapter",
+  //     },
+  //   };
+  //   if (!selectorCache.has(url)) {
+  //     selectorCache.set(url, siteSelector[url]);
+  //   }
+  //   return selectorCache.get(url);
+  // }
 
   // Function to create the settings UI
   function settingsUI() {
@@ -100,7 +146,7 @@
    * @returns {boolean} True if valid
    */
   function isValidDocument(doc) {
-    return doc?.querySelector(".c-user_menu") !== null;
+    return doc?.querySelector(getSelector(doc.location.origin).coinPlaceholder) !== null;
   }
 
   /**
@@ -131,14 +177,14 @@
     }
 
     try {
-      const balanceElement = doc.querySelector(".c-user_menu li:first-child a");
+      const balanceElement = doc.querySelector(getSelector(window.location.origin).balancePlaceholder);
       if (!balanceElement) {
         console.error("Balance element not found");
         return null;
       }
 
       const balanceText = balanceElement.textContent.trim();
-      const balanceMatch = balanceText.match(/Balance:\s*([\d,]+)/);
+      const balanceMatch = balanceText.match(getSelector(window.location.origin).balanceRegex);
       if (!balanceMatch) {
         console.error("Invalid balance format");
         return null;
@@ -163,7 +209,7 @@
 
     try {
       const response = await sendRequest(
-        `${window.location.origin}/user-settings`,
+        getSelector(window.location.origin).coinPage,
         { method: 'GET', signal: controller.signal },
         TIMEOUT_MS
       );
@@ -186,7 +232,7 @@
 
         content += decoder.decode(value, { stream: true });
         
-        if (content.includes('Balance:')) {
+        if (content.includes(getSelector(window.location.origin).balanceString)) {
           controller.abort();
           const doc = parseHTML(content);
           return doc ? getBalance(doc) : null;
@@ -219,7 +265,7 @@
         throw new Error('Invalid delta value for balance update');
       }
       balance = Math.max(0, balance - delta); // Prevent negative balance
-      const balanceElement = document.querySelector(".c-user_menu li:first-child a");
+      const balanceElement = document.querySelector(getSelector(window.location.origin).balancePlaceholder);
       if (balanceElement) {
         console.log('Updating UI with new Balance:', balance);
         const balanceTextNode = balanceElement.childNodes[balanceElement.childNodes.length - 1];
@@ -264,7 +310,7 @@
    */
   function findAndLinkifyCoins() {
     try {
-      const coinElements = document.querySelectorAll(".premium-block .coin");
+      const coinElements = document.querySelectorAll(getSelector(window.location.origin).premiumChapterIndicator);
       console.log(`Found ${coinElements.length} coin elements`);
 
       coinElements.forEach((coin) => {
@@ -400,7 +446,7 @@
     }
     const chapterElement = coin.closest(".wp-manga-chapter");
     const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
-    const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
+    const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
 
     if (!chapterElement || !chapterIdMatch || !nonceElement) {
       console.error("Required element not found");
@@ -412,13 +458,13 @@
     elementSpinner(coin, true);
 
     const postData = new URLSearchParams({
-      action: "wp_manga_buy_chapter",
+      action: getSelector(window.location.origin).unlockAction,
       chapter: chapterIdMatch[1],
       nonce: nonceElement.value,
     });
 
     try {
-      const response = await sendRequest(`${window.location.origin}/wp-admin/admin-ajax.php`, {
+      const response = await sendRequest(getSelector(window.location.origin).unlockRequestURL, {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -444,7 +490,7 @@
         }
 
         // Remove the premium-block class from the chapter element
-        chapterElement.classList.remove("premium-block");
+        chapterElement.classList.remove(getSelector(window.location.origin).premiumIndicator);
 
         // Remove the c-btn-custom-1 class from the coin element
         coin.classList.remove("c-btn-custom-1");
@@ -612,7 +658,7 @@
         return;
       }
 
-      const coinElements = Array.from(document.querySelectorAll(".premium-block .coin")).reverse();
+      const coinElements = Array.from(document.querySelectorAll(getSelector(window.location.origin).premiumChapterIndicator)).reverse();
       
 
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
@@ -652,10 +698,10 @@
     
     const chapterElement = nextButton.closest(".wp-manga-chapter");
     const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
-    const nonceElement = document.querySelector('input[name="wp-manga-coin-nonce"]');
+    const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
 
     const postData = new URLSearchParams({
-      action: "wp_manga_buy_chapter",
+      action: getSelector(window.location.origin).unlockAction,
       chapter: chapterIdMatch[1],
       nonce: nonceElement.value,
     });
