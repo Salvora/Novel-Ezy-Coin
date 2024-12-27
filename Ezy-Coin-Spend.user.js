@@ -6,9 +6,9 @@
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.0
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.1
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
-// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.0
+// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.1
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -29,7 +29,7 @@
   let balance = null; // Variable to store the balance value
   let totalCost = null; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
-  let autoUnlockSetting = false; // Variable to activate/deactivate the auto unlock functionality from Settings UI
+  let autoUnlockSetting = GM_getValue('autoUnlock', false); // Initialize the variable from settings
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
@@ -75,7 +75,6 @@
     document.body.appendChild(container.firstElementChild);
   
     const checkbox = document.getElementById(SETTINGS.checkboxId);
-    autoUnlockSetting = GM_getValue('autoUnlock', false); // Initialize the variable
     checkbox.checked = autoUnlockSetting;
   
     checkbox.addEventListener('change', e => {
@@ -338,16 +337,16 @@
       const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ''), 10);
       elementSpinner(coin, true);
       if (!(await checkBalance(chapterCoinCost))) {
-        flashCoin(coin);
+        flashCoin(coin, false);
         return;
       }
       const result = await unlockChapter(coin);
       if (!result) {
-        flashCoin(coin);
+        flashCoin(coin, false);
         console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
       }
     } catch (error) {
-      flashCoin(coin);
+      flashCoin(coin, false);
       console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
@@ -364,18 +363,23 @@
   }
 
   /**
-   * Function to flash the coin with fa-times-circle icon
+   * Function to flash the coin with an icon
    * @param {HTMLElement} coin - The coin element to flash
+   * @param {boolean} isSuccess - Whether to flash green for success or red for failure
    */
-  function flashCoin(coin) {
+  function flashCoin(coin, isSuccess) {
     const originalContent = coin.innerHTML;
 
-    // Replace the content of the coin element with the fa-times-circle icon
-    coin.innerHTML = '<i class="fas fa-times-circle"></i>';
-    coin.classList.add('flash-red');
+    // Determine the icon and class based on success or failure
+    const iconClass = isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle';
+    const flashClass = isSuccess ? 'flash-green' : 'flash-red';
+
+    // Replace the content of the coin element with the appropriate icon
+    coin.innerHTML = `<i class="${iconClass}"></i>`;
+    coin.classList.add(flashClass);
 
     setTimeout(() => {
-      coin.classList.remove('flash-red');
+      coin.classList.remove(flashClass);
       // Restore the original content after the flash effect
       coin.innerHTML = originalContent;
     }, 1000);
@@ -392,7 +396,7 @@
       return false;
     }
     const chapterElement = coin.closest(".wp-manga-chapter");
-    const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
+    const chapterIdMatch = chapterElement?.className.match(getSelector(window.location.origin).chapterIdRegex);
     const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
 
     if (!chapterElement || !chapterIdMatch || !nonceElement) {
@@ -474,6 +478,7 @@
     } catch (error) {
       console.error("Error:", error);
       coin.disabled = false; // Re-enable the coin element if an error occurs
+      flashCoin(coin, false);
       return false;
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
@@ -612,11 +617,11 @@
         try {
           const result = await unlockChapter(coin);
           if (!result) {
-            flashCoin(coin);
+            flashCoin(coin, false);
             console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
           }
         } catch (error) {
-          flashCoin(coin);
+          flashCoin(coin, false);
           console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
         } finally {
           processingCoins.delete(coin); // Ensure coin is removed from the set
@@ -653,7 +658,7 @@
     }
 
     // Extract the chapter ID from the class name
-    const chapterIdMatch = nextButton.className.match(/data-chapter-(\d+)/);
+    const chapterIdMatch = nextButton.className.match(getSelector(window.location.origin).chapterIdRegex);
     if (!chapterIdMatch) {
       console.error("Chapter ID not found in the class name");
       return;
@@ -675,15 +680,56 @@
     });
 
     try {
-      const result = await unlockChapter(nextButton);
-      if (!result) {
-        flashCoin(nextButton);
-        console.error(`Failed to unlock chapter for coin: ${nextButton.textContent}`);
+      const response = await sendRequest(getSelector(window.location.origin).unlockRequestURL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        body: postData.toString(),
+      });
+
+      if (!response.ok) {
+        console.error("Network response was not ok");
+        flashCoin(nextButton, false);
+        return;
       }
+      const data = await response.json();
+      console.log("Successfully sent the request:", data);
+      if (data.success && data.data.status) {
+        // Update the balance element
+        try {
+          // Attempt to update the balance
+          await updateBalance(parseInt(nextButton.textContent.replace(/,/g, ''), 10));
+        } catch (error) {
+          console.error('Error calling updateBalance:', error);
+        }
+
+        // Remove the premium-block class from the next chapter button
+        nextButton.classList.remove(getSelector(window.location.origin).premiumIndicator);
+
+        // Update the href attribute of the <a> element with the URL from the response
+        const linkElement = nextButton.querySelector('a');
+        if (linkElement) {
+          linkElement.href = data.data.url;
+
+          // Clone the <a> element to remove all event listeners
+          const newLinkElement = linkElement.cloneNode(true);
+          linkElement.parentNode.replaceChild(newLinkElement, linkElement);
+        }
+
+        console.log("Next chapter unlocked successfully (AutoUnlocked):", chapterID);
+      } else {
+        console.error("Failed to buy chapter:", data.data.message);
+        flashCoin(nextButton, false);
+      }
+
     } catch (error) {
-      flashCoin(nextButton);
-      console.error(`Error unlocking chapter for coin: ${nextButton.textContent}`, error);
-    }
+      console.error("Error:", error);
+      flashCoin(nextButton, false);
+      } finally {
+        concurrencyLimit = globalConcurrencyLimit; // Reset concurrency limit
+      }
   }
 
   /**

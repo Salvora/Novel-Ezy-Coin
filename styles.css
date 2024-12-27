@@ -134,3 +134,20 @@
   0% { background-color: red !important; }
   100% { background-color: transparent !important; }
 }
+
+.flash-green {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: flash-green 1s forwards !important;
+  background-color: green !important;
+}
+
+.flash-green:hover {
+  background-color: green !important;
+}
+
+@keyframes flash-green {
+  0% { background-color: green !important; }
+  100% { background-color: transparent !important; }
+}
