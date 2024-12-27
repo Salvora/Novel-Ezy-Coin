@@ -17,6 +17,7 @@
 // @description Userscript to spend your coins to unlock chapters easily
 // @match       https://darkstartranslations.com/manga/*
 // @match       https://hiraethtranslation.com/novel/*
+// @match       https://luminarynovels.com/novel/*
 // @license     GPL-3.0-or-later
 // @run-at      document-end
 // ==/UserScript==
@@ -25,13 +26,13 @@
   "use strict";
   const processingCoins = new Set(); // Set to track coins being processed
 
-  let balance = 0; // Variable to store the balance value
-  let totalCost = 0; // Variable to store the total cost of all chapters
+  let balance = null; // Variable to store the balance value
+  let totalCost = null; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
   let autoUnlockSetting = false; // Variable to activate/deactivate the auto unlock functionality from Settings UI
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
+  const concurrencyLimit = 0; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -57,6 +58,7 @@
   function getSelector() {
     const siteSelector = {
       "https://darkstartranslations.com": "#manga-chapters-holder",
+      "https://luminarynovels.com": "#manga-chapters-holder",
       "https://hiraethtranslation.com": ".page-content-listing.single-page",
     };
     const url = window.location.origin;
@@ -126,28 +128,28 @@
   function getBalance(doc) {
     if (!doc || !(doc instanceof Document)) {
       console.error("Invalid document provided");
-      return 0;
+      return null;
     }
 
     try {
       const balanceElement = doc.querySelector(".c-user_menu li:first-child a");
       if (!balanceElement) {
         console.error("Balance element not found");
-        return 0;
+        return null;
       }
 
       const balanceText = balanceElement.textContent.trim();
       const balanceMatch = balanceText.match(/Balance:\s*([\d,]+)/);
       if (!balanceMatch) {
         console.error("Invalid balance format");
-        return 0;
+        return null;
       }
 
       const parsedBalance = parseInt(balanceMatch[1].replace(/,/g, ''), 10);
-      return isNaN(parsedBalance) ? 0 : parsedBalance;
+      return isNaN(parsedBalance) ? null : parsedBalance;
     } catch (error) {
       console.error("Error getting balance:", error);
-      return 0;
+      return null;
     }
   }
 
@@ -180,7 +182,7 @@
         
         if (done) {
           const doc = parseHTML(content + decoder.decode());
-          return doc ? getBalance(doc) : 0;
+          return doc ? getBalance(doc) : null;
         }
 
         content += decoder.decode(value, { stream: true });
@@ -188,7 +190,7 @@
         if (content.includes('Balance:')) {
           controller.abort();
           const doc = parseHTML(content);
-          return doc ? getBalance(doc) : 0;
+          return doc ? getBalance(doc) : null;
         }
       }
     } catch (error) {
@@ -645,10 +647,6 @@
    * unlock the next chapter if locked
    */
   function autoUnlockChapters() {
-    if (!autoUnlockSetting) {
-      console.log("Auto unlock setting is disabled");
-      return false;
-    }
     const chapterList = document.getElementById("manga-reading-nav-head");
     const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
 
@@ -685,7 +683,7 @@
   function init() {
     try {
       balance = getBalance(document);
-      if (balance === 0) {
+      if (balance === null) {
         console.error("Balance not found (Maybe not logged in?), stopping the script");
         return;
       }
