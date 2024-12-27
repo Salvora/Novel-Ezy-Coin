@@ -32,7 +32,7 @@
   let autoUnlockSetting = false; // Variable to activate/deactivate the auto unlock functionality from Settings UI
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
+  const concurrencyLimit = 0; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -52,9 +52,9 @@
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
 
   /**
-   * Function to get the appropriate selector based on the current URL
-   * @returns {string} The selector for the current site
-   */
+     * Function to get the appropriate chapter list selector based on the current URL with caching
+     * @returns {string} The selector for the current site
+     */
   function getSelector() {
     const siteSelector = {
       "https://darkstartranslations.com": "#manga-chapters-holder",
@@ -62,17 +62,8 @@
       "https://hiraethtranslation.com": ".page-content-listing.single-page",
     };
     const url = window.location.origin;
-    return siteSelector[url];
-  }
-
-  /**
-   * Function to get cached selector
-   * @returns {string} The cached selector for the current site
-   */
-  function getCachedSelector() {
-    const url = window.location.origin;
     if (!selectorCache.has(url)) {
-      selectorCache.set(url, getSelector());
+      selectorCache.set(url, siteSelector[url]);
     }
     return selectorCache.get(url);
   }
@@ -273,7 +264,6 @@
           coin.addEventListener("click", handleCoinClick);
           coin.classList.add("c-btn-custom-1");
           coin.dataset.listenerAdded = true;
-          console.log("Event listener added to coin elements");
         }
       });
 
@@ -364,7 +354,7 @@
       elementSpinner(coin, false);
       // Reconnect the observer
       if (observer) {
-        const targetDiv = document.querySelector(getCachedSelector());
+        const targetDiv = document.querySelector(getSelector());
         if (targetDiv) {
           observer.observe(targetDiv, { childList: true, subtree: true });
         }
@@ -708,7 +698,7 @@
           }
 
         });
-        const targetDiv = document.querySelector(getCachedSelector());
+        const targetDiv = document.querySelector(getSelector());
         if (targetDiv) {
           debouncedFindAndLinkifyCoins(); // Use debounced version
           observer.observe(targetDiv, { childList: true, subtree: true });
