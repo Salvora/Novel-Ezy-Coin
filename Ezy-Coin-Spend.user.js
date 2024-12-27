@@ -66,62 +66,6 @@
     return selectorCache.get(url);
   }
 
-  // /**
-  //      * Function to get the appropriate chapter list selector based on the current URL with caching
-  //      * @param {string} url - The URL of the current site
-  //      * @returns {string} The selector for the current site
-  //      */
-  // function getSelector(url) {
-  //   const siteSelector = {
-  //     "https://darkstartranslations.com": {
-  //       chapterList: "#manga-chapters-holder",
-  //       buttonLocation: "#init-links",
-  //       balancePlaceholder: ".c-user_menu li:first-child a",
-  //       balanceString: "Balance:",
-  //       balanceRegex: /Balance:\s*([\d,]+)/,
-  //       coinPage: "https://darkstartranslations.com/user-settings",
-  //       coinPlaceholder: ".c-user_menu",
-  //       premiumChapterIndicator: ".premium-block .coin",
-  //       premiumIndicator: ".premium-block",
-  //       noncePlaceholder: "input[name='wp-manga-coin-nonce']",
-  //       unlockRequestURL: "https://darkstartranslations.com/wp-admin/admin-ajax.php",
-  //       unlockAction: "wp_manga_buy_chapter",
-  //     },
-  //     "https://luminarynovels.com": {
-  //       chapterList: "#manga-chapters-holder",
-  //       buttonLocation: "#init-links",
-  //       balancePlaceholder: ".c-user_menu li:first-child a",
-  //       balanceString: "Balance:",
-  //       balanceRegex: /Balance:\s*([\d,]+)/,
-  //       coinPage: "https://luminarynovels.com/user-settings",
-  //       coinPlaceholder: ".c-user_menu",
-  //       premiumChapterIndicator: ".premium-block .coin",
-  //       premiumIndicator: ".premium-block",
-  //       noncePlaceholder: "input[name='wp-manga-coin-nonce']",
-  //       unlockRequestURL: "https://luminarynovels.com/wp-admin/admin-ajax.php",
-  //       unlockAction: "wp_manga_buy_chapter",
-  //     },
-  //     "https://hiraethtranslation.com": {
-  //       chapterList: ".page-content-listing.single-page",
-  //       buttonLocation: "#init-links",
-  //       balancePlaceholder: ".c-user_menu li:first-child a",
-  //       balanceString: "Balance:",
-  //       balanceRegex: /Balance:\s*([\d,]+)/,
-  //       coinPage: "https://hiraethtranslation.com/user-settings",
-  //       coinPlaceholder: ".c-user_menu",
-  //       premiumChapterIndicator: ".premium-block .coin",
-  //       premiumIndicator: ".premium-block",
-  //       noncePlaceholder: "input[name='wp-manga-coin-nonce']",
-  //       unlockRequestURL: "https://hiraethtranslation.com/wp-admin/admin-ajax.php",
-  //       unlockAction: "wp_manga_buy_chapter",
-  //     },
-  //   };
-  //   if (!selectorCache.has(url)) {
-  //     selectorCache.set(url, siteSelector[url]);
-  //   }
-  //   return selectorCache.get(url);
-  // }
-
   // Function to create the settings UI
   function settingsUI() {
     const template = GM_getResourceText(SETTINGS.resourceName);
@@ -143,22 +87,24 @@
   /**
    * Validates document structure
    * @param {Document} doc Document to validate
+   * @param {string} url The URL of the current site
    * @returns {boolean} True if valid
    */
-  function isValidDocument(doc) {
-    return doc?.querySelector(getSelector(doc.location.origin).coinPlaceholder) !== null;
+  function isValidDocument(doc, url) {
+    return doc?.querySelector(getSelector(url).coinPlaceholder) !== null;
   }
 
   /**
    * Parses HTML content and validates document
    * @param {string} content HTML content
+   * @param {string} url The URL of the current site
    * @returns {Document|null} Parsed document or null
    */
-  function parseHTML(content) {
+  function parseHTML(content, url) {
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(content, 'text/html');
-      return isValidDocument(doc) ? doc : null;
+      return isValidDocument(doc, url) ? doc : null;
     } catch (error) {
       console.error('Error parsing HTML:', error);
       return null;
@@ -206,10 +152,11 @@
     const TIMEOUT_MS = 10000;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const coinPage = getSelector(window.location.origin).coinPage;
 
     try {
       const response = await sendRequest(
-        getSelector(window.location.origin).coinPage,
+        coinPage,
         { method: 'GET', signal: controller.signal },
         TIMEOUT_MS
       );
@@ -226,7 +173,7 @@
         const { value, done } = await reader.read();
         
         if (done) {
-          const doc = parseHTML(content + decoder.decode());
+          const doc = parseHTML(content + decoder.decode(), coinPage);
           return doc ? getBalance(doc) : null;
         }
 
@@ -234,7 +181,7 @@
         
         if (content.includes(getSelector(window.location.origin).balanceString)) {
           controller.abort();
-          const doc = parseHTML(content);
+          const doc = parseHTML(content, coinPage);
           return doc ? getBalance(doc) : null;
         }
       }
@@ -684,41 +631,59 @@
 
   /**
    * Function to auto unlock chapters
-   * To Do
-   * check if it is the last chapter
-   * find the current chapter and check for next chapter
-   * check if the next chapter is locked
-   * unlock the next chapter if locked
    */
-  function autoUnlockChapters() {
-    const chapterList = document.getElementById("manga-reading-nav-head");
-    const selectElement = document.querySelector(".c-selectpicker.selectpicker_chapter.selectpicker.single-chapter-select");
-
-    const nextButton = document.getElementById("manga-reading-nav-foot")?.querySelector(".nav-next");
+  async function autoUnlockChapters() {
+    const globalConcurrencyLimit = concurrencyLimit;
+    concurrencyLimit = 1; // Set concurrency limit to 1 for auto unlock
     
-    const chapterElement = nextButton.closest(".wp-manga-chapter");
-    const chapterIdMatch = chapterElement?.className.match(/data-chapter-(\d+)/);
+    const headNextButton = document.getElementById("manga-reading-nav-head")?.querySelector(".nav-next");
+    const footNextButton = document.getElementById("manga-reading-nav-foot")?.querySelector(".nav-next");
+
+    let nextButton = headNextButton || footNextButton;
+
+    if (!nextButton) {
+      console.log("Next button not found! Possibly, this is the last chapter.");
+      return;
+    }
+    
+    // Check if the next chapter is locked
+    if (!nextButton.classList.contains("premium-block")) {
+      console.log("Next chapter is already unlocked");
+      return;
+    }
+
+    // Extract the chapter ID from the class name
+    const chapterIdMatch = nextButton.className.match(/data-chapter-(\d+)/);
+    if (!chapterIdMatch) {
+      console.error("Chapter ID not found in the class name");
+      return;
+    }
+
+    const chapterID = chapterIdMatch[1];
+    console.log("Next chapter is locked, chapter ID:", chapterID);
+
     const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
+    if (!nonceElement) {
+      console.error("Nonce element not found");
+      return;
+    }
 
     const postData = new URLSearchParams({
       action: getSelector(window.location.origin).unlockAction,
-      chapter: chapterIdMatch[1],
+      chapter: chapterID,
       nonce: nonceElement.value,
     });
 
-    if (!chapterList || !nextButton || !selectElement) {
-      console.error("Required elements for auto unlock not found");
-      return false;
+    try {
+      const result = await unlockChapter(nextButton);
+      if (!result) {
+        flashCoin(nextButton);
+        console.error(`Failed to unlock chapter for coin: ${nextButton.textContent}`);
+      }
+    } catch (error) {
+      flashCoin(nextButton);
+      console.error(`Error unlocking chapter for coin: ${nextButton.textContent}`, error);
     }
-  
-    const currentChapter = chapterList.querySelector("ol li.active");
-    if (!currentChapter) {
-      console.error("Current chapter element not found");
-      return false;
-    }
-  
-    // Implementation continues here...
-    return true;
   }
 
   /**
