@@ -48,20 +48,28 @@
       timeoutId = setTimeout(() => fn.apply(null, args), delay);
     };
   };
-  // Create debounced version of findAndLinkifyCoins
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
 
   /**
-     * Function to get the appropriate chapter list selector based on the current URL with caching
-     * @returns {string} The selector for the current site
-     */
-  function getSelector() {
+       * Function to get the appropriate chapter list selector based on the current URL with caching
+       * @param {string} url - The URL of the current site
+       * @returns {string} The selector for the current site
+       */
+  function getSelector(url) {
     const siteSelector = {
-      "https://darkstartranslations.com": "#manga-chapters-holder",
-      "https://luminarynovels.com": "#manga-chapters-holder",
-      "https://hiraethtranslation.com": ".page-content-listing.single-page",
+      "https://darkstartranslations.com": {
+        chapterList: "#manga-chapters-holder",
+        buttonLocation: "#init-links"
+      },
+      "https://luminarynovels.com": {
+        chapterList: "#manga-chapters-holder",
+        buttonLocation: "#init-links"
+      },
+      "https://hiraethtranslation.com": {
+        chapterList: ".page-content-listing.single-page",
+        buttonLocation: "#init-links"
+      },
     };
-    const url = window.location.origin;
     if (!selectorCache.has(url)) {
       selectorCache.set(url, siteSelector[url]);
     }
@@ -354,7 +362,7 @@
       elementSpinner(coin, false);
       // Reconnect the observer
       if (observer) {
-        const targetDiv = document.querySelector(getSelector());
+        const targetDiv = document.querySelector(getSelector(window.location.origin).chapterList);
         if (targetDiv) {
           observer.observe(targetDiv, { childList: true, subtree: true });
         }
@@ -503,7 +511,7 @@
    */
   function createUnlockAllButton() {
     try {
-      const targetElement = document.getElementById("init-links");
+      const targetElement = document.querySelector(getSelector(window.location.origin).buttonLocation);
       if (targetElement) {
         const button = document.createElement("button");
         button.id = "unlock-all-button"; // Assign an ID
@@ -680,11 +688,12 @@
       GM_addStyle(GM_getResourceText("customCSS"));
       const isChapterPage = chapterPageKeywordList.some(keyword => window.location.pathname.includes(`/${keyword}`));
       if (!isChapterPage) {
+        totalCost = 0;
         createUnlockAllButton();
         observer = new MutationObserver((mutations) => {
           for (const mutation of mutations) {
             if (mutation.addedNodes.length || mutation.removedNodes.length) {
-              debouncedFindAndLinkifyCoins(); // Use debounced version
+              debouncedFindAndLinkifyCoins();
               break;
             }
           }
@@ -698,9 +707,9 @@
           }
 
         });
-        const targetDiv = document.querySelector(getSelector());
+        const targetDiv = document.querySelector(getSelector(window.location.origin).chapterList);
         if (targetDiv) {
-          debouncedFindAndLinkifyCoins(); // Use debounced version
+          debouncedFindAndLinkifyCoins();
           observer.observe(targetDiv, { childList: true, subtree: true });
         } else {
           console.error("Target div not found");
