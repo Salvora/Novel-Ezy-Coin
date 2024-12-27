@@ -32,7 +32,7 @@
   let autoUnlockSetting = false; // Variable to activate/deactivate the auto unlock functionality from Settings UI
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  const concurrencyLimit = 0; // Limit the number of concurrent unlock requests
+  const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
