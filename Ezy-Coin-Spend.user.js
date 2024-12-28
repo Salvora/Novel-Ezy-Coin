@@ -654,6 +654,11 @@
     // Check if the next chapter is locked
     if (!nextButton.classList.contains("premium-block")) {
       console.log("Next chapter is already unlocked");
+
+    const linkElement = nextButton.querySelector('a');
+    if (linkElement) {
+      linkElement.classList.add("unlocked-green");
+    }
       return;
     }
 
@@ -704,7 +709,7 @@
         } catch (error) {
           console.error('Error calling updateBalance:', error);
         }
-
+        linkElement.classList.add("unlocked-green");
         // Remove the premium-block class from the next chapter button
         nextButton.classList.remove(getSelector(window.location.origin).premiumIndicator);
 
