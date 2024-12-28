@@ -58,8 +58,6 @@ This script is designed to prevent spending more than required. Please, report a
 ## TO DO
 
 - Auto-unlocking
-- settingsUI for domain
-
 
 ## Contributing
 
