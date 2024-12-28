@@ -29,7 +29,7 @@
   let balance = null; // Variable to store the balance value
   let totalCost = null; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
-  let autoUnlockSetting = GM_getValue('autoUnlock', false); // Initialize the variable from settings
+  let autoUnlockSetting = GM_getValue(`autoUnlock_${window.location.hostname}`, false); // Initialize the variable from settings
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
@@ -79,7 +79,7 @@
   
     checkbox.addEventListener('change', e => {
       autoUnlockSetting = e.target.checked; // Update the variable
-      GM_setValue('autoUnlock', autoUnlockSetting);
+      GM_setValue(`autoUnlock_${window.location.hostname}`, autoUnlockSetting);
     });
   }
 
@@ -523,7 +523,12 @@
 
         // Create a span element for the button text
         const buttonText = document.createElement("span");
-        buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+
+        const updateButtonContent = () => {
+          buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+          button.disabled = totalCost === 0;
+          totalCost === 0 ? button.classList.add('disabled') : button.classList.remove('disabled');
+        };
 
         updateButtonContent();
         button.appendChild(buttonText);
@@ -531,19 +536,7 @@
         targetElement.appendChild(button);
         console.log("Button inserted successfully");
 
-        // Function to update button content dynamically
-        const updateButtonContent = () => {
-          // Update button text and coin icon
-          buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
-        
-          // Set functional disabled state - button won't respond to clicks if totalCost is 0
-          button.disabled = totalCost === 0;
-        
-          // Set visual appearance using CSS class
-          // If totalCost is 0: add 'disabled' class
-          // If totalCost > 0: remove 'disabled' class
-          totalCost === 0 ? button.classList.add('disabled') : button.classList.remove('disabled');
-        };
+
         // Expose updateButtonContent for external calls
         button.updateContent = updateButtonContent;
         

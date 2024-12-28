@@ -58,9 +58,6 @@ This script is designed to prevent spending more than required. Please, report a
 ## TO DO
 
 - Auto-unlocking
-- Disable unlock all button when there are no premium chapters to be unlocked
-- test unlock all
-- test individual chapter unlocks
 - settingsUI for domain
 
 
