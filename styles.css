@@ -118,29 +118,44 @@
   background-color: #333333 !important;
 }
 
-.flash-red {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: flash-red-animation 1s forwards !important;
-  background-color: red !important;
+
+.flash-green:hover {
+  background-color: green !important;
 }
 
 .flash-red:hover {
   background-color: red !important;
 }
 
-.flash-green {
+
+.flash-green, .flash-red {
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: flash-green-animation 1s forwards !important;
+  animation: flash-animation 1s forwards !important;
+  background-color: inherit !important;
+  pointer-events: none !important;
+}
+
+.flash-green {
   background-color: green !important;
 }
 
-.flash-green:hover {
-  background-color: green !important;
+.flash-red {
+  background-color: red !important;
 }
+
+@keyframes flash-animation {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.flash-icon {
+  font-size: 1.5em; /* Adjust as needed */
+  transition: transform 1s ease;
+}
+
 
 @keyframes flash-green-animation {
   0% { background-color: green !important; }

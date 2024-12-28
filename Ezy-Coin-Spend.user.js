@@ -6,7 +6,7 @@
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.6
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.7
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.1
 // @author      Salvora
@@ -371,7 +371,7 @@
     const originalContent = coin.innerHTML;
 
     // Determine the icon and class based on success or failure
-    const iconClass = isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle';
+    const iconClass = isSuccess ? 'fas fa-check-circle flash-icon' : 'fas fa-times-circle flash-icon';
     const flashClass = isSuccess ? 'flash-green' : 'flash-red';
 
     // Replace the content of the coin element with the appropriate icon
