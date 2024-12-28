@@ -272,12 +272,9 @@
       totalCost = Array.from(coinElements)
         .reduce((total, coin) => total + (parseInt(coin.textContent.replace(/,/g, ''), 10) || 0), 0);
 
-      const unlockAllbutton = document.getElementById("unlock-all-button");
-      if (unlockAllbutton) {
-        const buttonText = unlockAllbutton.querySelector("span:first-child");
-        if (buttonText) {
-          buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
-        }
+      const unlockAllButton = document.getElementById("unlock-all-button");
+      if (unlockAllButton && unlockAllButton.updateContent) {
+        unlockAllButton.updateContent();
       }
 
       console.log(`Total cost calculated: ${totalCost}`);
@@ -528,6 +525,7 @@
         const buttonText = document.createElement("span");
         buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
 
+        updateButtonContent();
         button.appendChild(buttonText);
         elementSpinner(button, false);
         targetElement.appendChild(button);
@@ -535,9 +533,20 @@
 
         // Function to update button content dynamically
         const updateButtonContent = () => {
+          // Update button text and coin icon
           buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
+        
+          // Set functional disabled state - button won't respond to clicks if totalCost is 0
+          button.disabled = totalCost === 0;
+        
+          // Set visual appearance using CSS class
+          // If totalCost is 0: add 'disabled' class
+          // If totalCost > 0: remove 'disabled' class
+          totalCost === 0 ? button.classList.add('disabled') : button.classList.remove('disabled');
         };
-
+        // Expose updateButtonContent for external calls
+        button.updateContent = updateButtonContent;
+        
         button.addEventListener("click", async () => {
           const originalWidth = button.offsetWidth; // Save original button width
           button.style.width = `${originalWidth}px`; // Set button width to its original width
@@ -554,7 +563,6 @@
             updateButtonContent(); // Restore original button content dynamically
             buttonText.style.display = "inline"; // Show button text
             button.style.width = 'auto'; // Reset button width to auto
-            button.disabled = false; // Re-enable the button
           }
         });
       } else {
