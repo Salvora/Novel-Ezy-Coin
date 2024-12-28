@@ -130,9 +130,7 @@
 
       const balanceText = balanceElement.textContent.trim();
       const pattern = new RegExp(getSelector(window.location.origin).balanceRegex);
-      console.log("Balance text:", balanceText);
       const balanceMatch = balanceText.match(pattern);
-      console.log("Balance match:", balanceMatch);
       if (!balanceMatch) {
         console.error("Invalid balance format");
         return null;
