@@ -9,7 +9,7 @@
       "coinPlaceholder": ".c-user_menu",
       "chapterIDRegex": "data-chapter-(\\d+)",
       "premiumChapterIndicator": ".premium-block .coin",
-      "premiumIndicator": ".premium-block",
+      "premiumIndicator": "premium-block",
       "noncePlaceholder": "input[name='wp-manga-coin-nonce']",
       "unlockRequestURL": "https://darkstartranslations.com/wp-admin/admin-ajax.php",
       "unlockAction": "wp_manga_buy_chapter"
@@ -24,7 +24,7 @@
       "coinPlaceholder": ".c-user_menu",
       "chapterIDRegex": "data-chapter-(\\d+)",
       "premiumChapterIndicator": ".premium-block .coin",
-      "premiumIndicator": ".premium-block",
+      "premiumIndicator": "premium-block",
       "noncePlaceholder": "input[name='wp-manga-coin-nonce']",
       "unlockRequestURL": "https://luminarynovels.com/wp-admin/admin-ajax.php",
       "unlockAction": "wp_manga_buy_chapter"
@@ -39,7 +39,7 @@
       "coinPlaceholder": ".c-user_menu",
       "chapterIDRegex": "data-chapter-(\\d+)",
       "premiumChapterIndicator": ".premium-block .coin",
-      "premiumIndicator": ".premium-block",
+      "premiumIndicator": "premium-block",
       "noncePlaceholder": "input[name='wp-manga-coin-nonce']",
       "unlockRequestURL": "https://hiraethtranslation.com/wp-admin/admin-ajax.php",
       "unlockAction": "wp_manga_buy_chapter"
