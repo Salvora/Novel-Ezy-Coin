@@ -74,8 +74,8 @@
 }
 
 .c-btn:hover {
-  background-color: black;
-  color: white;
+  background-color: black !important;
+  color: white !important;
 }
 
 .c-btn:active {
@@ -110,12 +110,12 @@
 }
 
 .c-btn-custom-1:hover {
-  background-color: blue;
-  color: white;
+  background-color: blue !important;
+  color: white !important;
 }
 .c-btn-custom-1:active {
   transform: scale(0.95);
-  background-color: #333333;
+  background-color: #333333 !important;
 }
 
 
@@ -142,11 +142,6 @@
   align-items: center;
   animation: flash-green-animation 1s forwards !important;
   background-color: green !important;
-}
-
-.flash-icon {
-  font-size: 1.2em; /* Adjust as needed */
-  transition: transform 1s ease;
 }
 
 @keyframes flash-green-animation {
