@@ -6,7 +6,7 @@
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.2
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.3
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.1
 // @author      Salvora
