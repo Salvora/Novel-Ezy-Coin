@@ -8,7 +8,7 @@
 // @grant       GM_getValue
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.6.5
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
-// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.2
+// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.3
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
