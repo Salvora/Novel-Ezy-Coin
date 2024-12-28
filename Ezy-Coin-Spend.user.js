@@ -6,7 +6,7 @@
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.5
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.5.6
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.1
 // @author      Salvora
@@ -368,30 +368,20 @@
    * @param {boolean} isSuccess - Whether to flash green for success or red for failure
    */
   function flashCoin(coin, isSuccess) {
-   
+    const originalContent = coin.innerHTML;
+
+    // Determine the icon and class based on success or failure
     const iconClass = isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle';
     const flashClass = isSuccess ? 'flash-green' : 'flash-red';
 
-    const originalContent = coin.innerHTML;
-    const originalBackground = coin.style.backgroundColor;
-    
-    const flashIcon = document.createElement('i');
-    flashIcon.className = iconClass + ' flash-icon';
-
-    coin.innerHTML = '';
-    coin.appendChild(flashIcon);
-
-    // Force a reflow before adding the animation class
-    void coin.offsetWidth;
-    
-    // Add background color directly
-    coin.style.backgroundColor = isSuccess ? 'green' : 'red';
+    // Replace the content of the coin element with the appropriate icon
+    coin.innerHTML = `<i class="${iconClass}"></i>`;
     coin.classList.add(flashClass);
 
     setTimeout(() => {
       coin.classList.remove(flashClass);
+      // Restore the original content after the flash effect
       coin.innerHTML = originalContent;
-      coin.style.backgroundColor = originalBackground;
     }, 1000);
   }
 
