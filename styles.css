@@ -123,6 +123,7 @@
   justify-content: center;
   align-items: center;
   width: auto; /* Adjust width dynamically */
+  height: auto; /* Prevent height changes */
 }
 
 
@@ -155,7 +156,7 @@
 }
 
 .flash-icon {
-  font-size: inherit; /* Keep font size consistent */
+  font-size: 1.5em; /* Keep font size consistent */
   line-height: inherit; /* Inherit line height from the parent */
   vertical-align: middle; /* Ensure it aligns properly */
   display: flex; /* Flex for consistency */

@@ -6,9 +6,9 @@
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.6.3
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/styles.css?v=1.6.4
 // @resource    SETTINGS_HTML https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/dev/ezy-coin-settings.html?v=1.0.0
-// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.1
+// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/dev/siteConfig.json?v=1.0.2
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -152,6 +152,7 @@
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
     const coinPage = getSelector(window.location.origin).coinPage;
+    const coinPageBaseURL = new URL(coinPage).origin;
 
     try {
       const response = await sendRequest(
@@ -172,7 +173,7 @@
         const { value, done } = await reader.read();
         
         if (done) {
-          const doc = parseHTML(content + decoder.decode(), coinPage);
+          const doc = parseHTML(content + decoder.decode(), coinPageBaseURL);
           return doc ? getBalance(doc) : null;
         }
 
@@ -180,7 +181,7 @@
         
         if (content.includes(getSelector(window.location.origin).balanceString)) {
           controller.abort();
-          const doc = parseHTML(content, coinPage);
+          const doc = parseHTML(content, coinPageBaseURL);
           return doc ? getBalance(doc) : null;
         }
       }
