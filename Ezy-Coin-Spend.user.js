@@ -347,6 +347,7 @@
         flashCoin(coin, false);
         console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
       }
+      flashCoin(coin, true);
     } catch (error) {
       flashCoin(coin, false);
       console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
@@ -475,6 +476,7 @@
 
         // Call findAndLinkifyCoins to update the total cost and button text
         debouncedFindAndLinkifyCoins();
+        flashCoin(coin, true);
         return true;
       } else {
         console.error("Failed to buy chapter:", data.data.message);

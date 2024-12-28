@@ -162,6 +162,4 @@
   display: flex; /* Flex for consistency */
   justify-content: center;
   align-items: center;
-  margin: 0; /* Remove any inherited margins */
-  padding: 0; /* Prevent padding changes */
 }

@@ -59,12 +59,9 @@ This script is designed to prevent spending more than required. Please, report a
 
 - Auto-unlocking
 - Disable unlock all button when there are no premium chapters to be unlocked
-- During flash green and red background hover effects to be disabled
-- fix premium popup
-- chech regexs in json
-- fix after unlocking orange color does not disappear
 - test unlock all
 - test individual chapter unlocks
+- settingsUI for domain
 
 
 ## Contributing
