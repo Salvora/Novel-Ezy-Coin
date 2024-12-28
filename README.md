@@ -63,6 +63,9 @@ This script is designed to prevent spending more than required. Please, report a
 - fix premium popup
 - chech regexs in json
 - fix after unlocking orange color does not disappear
+- test unlock all
+- test individual chapter unlocks
+
 
 ## Contributing
 

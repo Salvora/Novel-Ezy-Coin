@@ -118,21 +118,22 @@
   background-color: #333333 !important;
 }
 
-.flash-red, .flash-green {
-  display: flex; /* Center children properly */
+.flash-red {
+  display: flex;
   justify-content: center;
   align-items: center;
-  width: auto; /* Adjust width dynamically */
-  height: auto; /* Prevent height changes */
-}
-
-
-.flash-red {
   animation: flash-red-animation 1s forwards !important;
   background-color: red !important;
 }
 
+.flash-red:hover {
+  background-color: red !important;
+}
+
 .flash-green {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   animation: flash-green-animation 1s forwards !important;
   background-color: green !important;
 }
@@ -141,9 +142,6 @@
   background-color: green !important;
 }
 
-.flash-red:hover {
-  background-color: red !important;
-}
 
 @keyframes flash-green-animation {
   0% { background-color: green !important; }
@@ -153,15 +151,4 @@
 @keyframes flash-red-animation {
   0% { background-color: red !important; }
   100% { background-color: transparent !important; }
-}
-
-.flash-icon {
-  font-size: 1.5em; /* Keep font size consistent */
-  line-height: inherit; /* Inherit line height from the parent */
-  vertical-align: middle; /* Ensure it aligns properly */
-  display: flex; /* Flex for consistency */
-  justify-content: center;
-  align-items: center;
-  margin: 0; /* Remove any inherited margins */
-  padding: 0; /* Prevent padding changes */
 }
