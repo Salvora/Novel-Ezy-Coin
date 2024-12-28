@@ -84,16 +84,13 @@
 }
 
 .c-btn-custom-1 {
-  display: flex;
+  display: inline-block;
   text-align: center;
   white-space: nowrap;
   vertical-align: middle;
   cursor: pointer;
   border-radius: 5px;
   font-weight: 600;
-  position: relative;
-  align-items: center;
-  justify-content: center;
 }
 
 #unlock-all-button {
@@ -102,9 +99,6 @@
   transition: transform 0.1s ease;
   line-height: normal;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .spinner {
@@ -119,59 +113,41 @@
   background-color: blue !important;
   color: white !important;
 }
-
 .c-btn-custom-1:active {
   transform: scale(0.95);
   background-color: #333333 !important;
+}
+
+.flash-red {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: flash-red-animation 1s forwards !important;
+  background-color: red !important;
 }
 
 .flash-red:hover {
   background-color: red !important;
 }
 
-.unlocked-green {
-  background-color: green !important;
-  color: white !important;
-}
-
-.unlocked-green:hover {
-  background-color: #0f0f0f !important; /* Adjust the color for the hover effect */
-  color: #fff !important;
-}
-
-.flash-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 1.5em; /* Adjust icon size as needed */
-  pointer-events: none; /* Allow clicks to pass through */
-}
-
-.flash-green, .flash-red {
-  transition: background-color 1s ease;
-  pointer-events: none !important;
-}
-
 .flash-green {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: flash-green-animation 1s forwards !important;
   background-color: green !important;
-  animation: flash-green-animation 1s ease-in-out;
 }
 
-.flash-red {
-  background-color: red !important;
-  animation: flash-red-animation 1s ease-in-out;
+.flash-green:hover {
+  background-color: green !important;
 }
 
 @keyframes flash-green-animation {
-  0% { background-color: green !important; opacity: 1; }
-  50% { background-color: green !important; opacity: 0.5; }
-  100% { background-color: transparent !important; opacity: 1; }
+  0% { background-color: green !important; }
+  100% { background-color: transparent !important; }
 }
 
 @keyframes flash-red-animation {
-  0% { background-color: red !important; opacity: 1; }
-  50% { background-color: red !important; opacity: 0.5; }
-  100% { background-color: transparent !important; opacity: 1; }
+  0% { background-color: red !important; }
+  100% { background-color: transparent !important; }
 }
-
