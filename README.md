@@ -58,6 +58,8 @@ This script is designed to prevent spending more than required. Please, report a
 ## TO DO
 
 - Auto-unlocking
+- Pre-Load Chapters
+- avoid manipulating innerHTML with CSS
 
 ## Contributing
 

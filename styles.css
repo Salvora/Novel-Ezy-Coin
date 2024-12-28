@@ -138,12 +138,12 @@
 }
 
 .flash-red {
-  animation: flash-red-animation 1s forwards !important;
+  animation: flash-red-animation 1s !important;
   background-color: red !important;
 }
 
 .flash-green {
-  animation: flash-green-animation 1s forwards !important;
+  animation: flash-green-animation 1s !important;
   background-color: green !important;
 }
 

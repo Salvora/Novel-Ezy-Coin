@@ -32,7 +32,7 @@
   let autoUnlockSetting = GM_getValue(`autoUnlock_${window.location.hostname}`, false); // Initialize the variable from settings
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  const concurrencyLimit = 1; // Limit the number of concurrent unlock requests
+  const concurrencyLimit = 0; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -188,11 +188,11 @@
       }
     } catch (error) {
       if (error.name === 'AbortError') {
-        console.log('Request aborted: timeout or balance found');
+        console.log('Request aborted: timeout or balance not found');
       } else {
         console.error('Error fetching balance:', error);
       }
-      return 0;
+      return null;
     } finally {
       clearTimeout(timeout);
     }
@@ -241,6 +241,10 @@
     try {
       console.log("Checking balance for cost:", cost);
       balance = await getDynamicBalance();
+      if (balance === null) {
+        console.error("Failed to get dynamic balance");
+        return false;
+      }
       if (cost > balance) {
         console.error(`Balance: ${balance} is not enough for purchasing the chapter with cost: ${cost} !!!`);
         return false;
@@ -300,10 +304,14 @@
         element.appendChild(spinner);
       }
       spinner.classList.add("show"); // Show spinner
+      console.log('elementSpinner: Spinner shown');
     } else {
       if (spinner) {
         spinner.classList.remove("show"); // Hide spinner
         element.removeChild(spinner); // Remove spinner element
+        console.log('elementSpinner: Spinner hidden and removed');
+      } else {
+        console.warn('elementSpinner: Spinner element not found');
       }
     }
   }
@@ -337,16 +345,19 @@
       elementSpinner(coin, true);
       if (!(await checkBalance(chapterCoinCost))) {
         flashCoin(coin, false);
+        elementSpinner(coin, false);
         return;
       }
       const result = await unlockChapter(coin);
       if (!result) {
         flashCoin(coin, false);
+        elementSpinner(coin, false);
         console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
       }
       flashCoin(coin, true);
     } catch (error) {
       flashCoin(coin, false);
+      elementSpinner(coin, false);
       console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
@@ -369,6 +380,7 @@
    */
   function flashCoin(coin, isSuccess) {
     const originalContent = coin.innerHTML;
+    console.log('flashCoin: Original content stored');
 
     // Determine the icon and class based on success or failure
     const iconClass = isSuccess ? 'fas fa-check-circle flash-icon' : 'fas fa-times-circle flash-icon';
@@ -377,11 +389,19 @@
     // Replace the content of the coin element with the appropriate icon
     coin.innerHTML = `<i class="${iconClass}"></i>`;
     coin.classList.add(flashClass);
+    console.log(`flashCoin: Added class ${flashClass} and set innerHTML to <i class="${iconClass}"></i>`);
 
     setTimeout(() => {
+      console.log('flashCoin: Timeout started, removing flash class and restoring content');
       coin.classList.remove(flashClass);
       // Restore the original content after the flash effect
       coin.innerHTML = originalContent;
+      console.log('flashCoin: Flash effect removed, original content restored');
+      // Ensure spinner is hidden after restoring content if present
+      console.log('flashCoin: Calling elementSpinner to remove the spinner');
+      elementSpinner(coin, false);
+      console.log('flashCoin: Spinner hidden after restoring content');
+
     }, 1000);
   }
 
@@ -473,7 +493,6 @@
 
         // Call findAndLinkifyCoins to update the total cost and button text
         debouncedFindAndLinkifyCoins();
-        flashCoin(coin, true);
         return true;
       } else {
         console.error("Failed to buy chapter:", data.data.message);
@@ -484,7 +503,6 @@
     } catch (error) {
       console.error("Error:", error);
       coin.disabled = false; // Re-enable the coin element if an error occurs
-      flashCoin(coin, false);
       return false;
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
