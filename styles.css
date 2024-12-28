@@ -119,13 +119,7 @@
 }
 
 
-.flash-green:hover {
-  background-color: green !important;
-}
 
-.flash-red:hover {
-  background-color: red !important;
-}
 
 
 .flash-red {
@@ -142,6 +136,14 @@
   align-items: center;
   animation: flash-green-animation 1s forwards !important;
   background-color: green !important;
+}
+
+.flash-green:hover {
+  background-color: green !important;
+}
+
+.flash-red:hover {
+  background-color: red !important;
 }
 
 @keyframes flash-green-animation {
