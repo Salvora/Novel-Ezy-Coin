@@ -67,6 +67,7 @@
 
 .coin {
   transition: transform 0.1s ease;
+  line-height: 50px;
 }
 
 .coin.clicked {
@@ -118,10 +119,6 @@
   background-color: #333333 !important;
 }
 
-
-
-
-
 .flash-red {
   display: flex;
   justify-content: center;
@@ -158,5 +155,6 @@
 
 .flash-icon {
   font-size: 1.5em; /* Adjust as needed */
-  transition: transform 1s ease;
+  transition: none;
+  vertical-align: middle;
 }
