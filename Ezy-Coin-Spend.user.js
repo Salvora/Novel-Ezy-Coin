@@ -129,7 +129,8 @@
       }
 
       const balanceText = balanceElement.textContent.trim();
-      const balanceMatch = balanceText.match(getSelector(window.location.origin).balanceRegex);
+      const pattern = new RegExp(getSelector(window.location.origin).balanceRegex);
+      const balanceMatch = balanceText.match(pattern);
       if (!balanceMatch) {
         console.error("Invalid balance format");
         return null;
@@ -397,7 +398,8 @@
       return false;
     }
     const chapterElement = coin.closest(".wp-manga-chapter");
-    const chapterIdMatch = chapterElement?.className.match(getSelector(window.location.origin).chapterIdRegex);
+    const pattern = new RegExp(getSelector(window.location.origin).chapterIdRegex);
+    const chapterIdMatch = chapterElement?.className.match(pattern);
     const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
 
     if (!chapterElement || !chapterIdMatch || !nonceElement) {
@@ -664,7 +666,8 @@
     }
 
     // Extract the chapter ID from the class name
-    const chapterIdMatch = nextButton.className.match(getSelector(window.location.origin).chapterIdRegex);
+    const pattern = new RegExp(getSelector(window.location.origin).chapterIdRegex);
+    const chapterIdMatch = chapterElement?.className.match(pattern);
     if (!chapterIdMatch) {
       console.error("Chapter ID not found in the class name");
       return;
