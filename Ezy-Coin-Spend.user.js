@@ -130,7 +130,9 @@
 
       const balanceText = balanceElement.textContent.trim();
       const pattern = new RegExp(getSelector(window.location.origin).balanceRegex);
+      console.log("Balance text:", balanceText);
       const balanceMatch = balanceText.match(pattern);
+      console.log("Balance match:", balanceMatch);
       if (!balanceMatch) {
         console.error("Invalid balance format");
         return null;
@@ -398,11 +400,15 @@
       return false;
     }
     const chapterElement = coin.closest(".wp-manga-chapter");
-    const pattern = new RegExp(getSelector(window.location.origin).chapterIdRegex);
-    const chapterIdMatch = chapterElement?.className.match(pattern);
+    // Use classList to find the class that starts with data-chapter-
+    const chapterClass = Array.from(chapterElement?.classList || [])
+                          .find(className => className.startsWith('data-chapter-'));
+    // Extract the number from the class name
+    const chapterId = chapterClass?.split('-')[2];
+
     const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
 
-    if (!chapterElement || !chapterIdMatch || !nonceElement) {
+    if (!chapterElement || !chapterId || !nonceElement) {
       console.error("Required element not found");
       coin.disabled = false; // Re-enable the coin element if required elements are not found
       processingCoins.delete(coin); // Remove coin from the set
@@ -413,7 +419,7 @@
 
     const postData = new URLSearchParams({
       action: getSelector(window.location.origin).unlockAction,
-      chapter: chapterIdMatch[1],
+      chapter: chapterId,
       nonce: nonceElement.value,
     });
 
@@ -666,14 +672,15 @@
     }
 
     // Extract the chapter ID from the class name
-    const pattern = new RegExp(getSelector(window.location.origin).chapterIdRegex);
-    const chapterIdMatch = chapterElement?.className.match(pattern);
-    if (!chapterIdMatch) {
+    const chapterClass = Array.from(chapterElement?.classList || [])
+                          .find(className => className.startsWith('data-chapter-'));
+    // Extract the number from the class name
+    const chapterId = chapterClass?.split('-')[2];
+    if (!chapterId) {
       console.error("Chapter ID not found in the class name");
       return;
     }
 
-    const chapterID = chapterIdMatch[1];
     console.log("Next chapter is locked, chapter ID:", chapterID);
 
     const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
