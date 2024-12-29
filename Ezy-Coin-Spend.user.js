@@ -821,20 +821,6 @@
   }
 
   /**
-   * Clears all cached pages.
-   */
-  async function clearAllCachedPages() {
-    const keys = await GM.listValues();
-    for (const key of keys) {
-      if (key.startsWith('preloadedPage_')) {
-        await GM.deleteValue(key);
-        console.log(`Cleared cached content for key: ${key}`);
-      }
-    }
-    console.log('All cached pages have been cleared.');
-  }
-
-  /**
    * Function to auto unlock chapters
    */
   async function autoUnlockChapters() {
