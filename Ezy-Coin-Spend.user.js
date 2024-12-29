@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.6
+// @version     1.6.7
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
