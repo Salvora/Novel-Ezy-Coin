@@ -344,20 +344,16 @@
       const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ''), 10);
       elementSpinner(coin, true);
       if (!(await checkBalance(chapterCoinCost))) {
-        flashCoin(coin, false);
-        elementSpinner(coin, false);
+        await flashCoin(coin, false);
         return;
       }
       const result = await unlockChapter(coin);
       if (!result) {
-        flashCoin(coin, false);
-        elementSpinner(coin, false);
+        await flashCoin(coin, false);
         console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
       }
-      flashCoin(coin, true);
     } catch (error) {
-      flashCoin(coin, false);
-      elementSpinner(coin, false);
+      await flashCoin(coin, false);
       console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
     } finally {
       processingCoins.delete(coin); // Remove coin from the set
@@ -377,10 +373,10 @@
    * Function to flash the coin with an icon
    * @param {HTMLElement} coin - The coin element to flash
    * @param {boolean} isSuccess - Whether to flash green for success or red for failure
+   * @returns {Promise} - Resolves after the flash effect is complete
    */
-  function flashCoin(coin, isSuccess) {
+  async function flashCoin(coin, isSuccess) {
     const originalContent = coin.innerHTML;
-    console.log('flashCoin: Original content stored');
 
     // Determine the icon and class based on success or failure
     const iconClass = isSuccess ? 'fas fa-check-circle flash-icon' : 'fas fa-times-circle flash-icon';
@@ -389,19 +385,11 @@
     // Replace the content of the coin element with the appropriate icon
     coin.innerHTML = `<i class="${iconClass}"></i>`;
     coin.classList.add(flashClass);
-    console.log(`flashCoin: Added class ${flashClass} and set innerHTML to <i class="${iconClass}"></i>`);
 
     setTimeout(() => {
-      console.log('flashCoin: Timeout started, removing flash class and restoring content');
       coin.classList.remove(flashClass);
       // Restore the original content after the flash effect
       coin.innerHTML = originalContent;
-      console.log('flashCoin: Flash effect removed, original content restored');
-      // Ensure spinner is hidden after restoring content if present
-      console.log('flashCoin: Calling elementSpinner to remove the spinner');
-      elementSpinner(coin, false);
-      console.log('flashCoin: Spinner hidden after restoring content');
-
     }, 1000);
   }
 
@@ -645,11 +633,11 @@
         try {
           const result = await unlockChapter(coin);
           if (!result) {
-            flashCoin(coin, false);
+            await flashCoin(coin, false);
             console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
           }
         } catch (error) {
-          flashCoin(coin, false);
+          await flashCoin(coin, false);
           console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
         } finally {
           processingCoins.delete(coin); // Ensure coin is removed from the set
@@ -726,7 +714,7 @@
 
       if (!response.ok) {
         console.error("Network response was not ok");
-        flashCoin(nextButton, false);
+        await flashCoin(nextButton, false);
         return;
       }
       const data = await response.json();
@@ -756,12 +744,12 @@
         console.log("Next chapter unlocked successfully (AutoUnlocked):", chapterID);
       } else {
         console.error("Failed to buy chapter:", data.data.message);
-        flashCoin(nextButton, false);
+        await flashCoin(nextButton, false);
       }
 
     } catch (error) {
       console.error("Error:", error);
-      flashCoin(nextButton, false);
+      await flashCoin(nextButton, false);
       } finally {
         concurrencyLimit = globalConcurrencyLimit; // Reset concurrency limit
       }
