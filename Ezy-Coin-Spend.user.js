@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.4
+// @version     1.6.5
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -33,6 +33,7 @@
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   let concurrencyLimit = 1; // Limit the number of concurrent unlock requests
+  let enableChapterLog = false; // Enable logging of chapter details
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -392,6 +393,9 @@
       }
 
       console.log(`Total cost calculated: ${totalCost}`);
+      if (enableChapterLog) {
+        logDetails(coinElements);
+      }
     } catch (error) {
       console.error("Error finding and linking coins:", error);
     }
@@ -870,6 +874,77 @@
         concurrencyLimit = globalConcurrencyLimit; // Reset concurrency limit
       }
   }
+
+  /**
+   * Retrieves the title of the current series from the page.
+   *
+   * @returns {string} The title of the series, or 'Unknown Series' if not found.
+   */
+  function getSeriesTitle() {
+      const seriesTitleElement = document.querySelector('.post-title h1');
+      return seriesTitleElement ? seriesTitleElement.textContent.trim() : 'Unknown Series';
+  }
+  
+  /**
+   * Logs detailed information about each chapter associated with the provided coin elements.
+   *
+   * @param {NodeListOf<HTMLElement>} coinElements - A collection of coin elements representing chapters.
+   *
+   * @typedef {Object} ChapterDetails
+   * @property {string} chapterId - The unique identifier of the chapter.
+   * @property {string} nonce - The nonce value for security purposes.
+   * @property {string} action - The action to be performed for unlocking the chapter.
+   * @property {string} unlockRequestURL - The URL to request unlocking the chapter.
+   *
+   * @typedef {Object} ChapterInfo
+   * @property {string} chapterTitle - The title of the chapter.
+   * @property {ChapterDetails} chapterDetails - Detailed information about the chapter.
+   *
+   * @typedef {Object} SeriesDetails
+   * @property {string} seriesTitle - The title of the series.
+   * @property {ChapterInfo[]} chapters - An array of chapter details.
+   *
+   * @returns {void}
+   */
+  function logDetails(coinElements) {
+      const seriesTitle = getSeriesTitle();
+      const seriesDetails = {
+          seriesTitle,
+          chapters: []
+      };
+  
+      coinElements.forEach(coin => {
+          const { chapterId } = getChapterId(coin, 'series-page');
+          const nonce = getNonceElement()?.value;
+          const action = getSelector(window.location.origin).unlockAction;
+  
+          // Find the ancestor element that contains the chapter title
+          const ancestorElement = coin.closest('.wp-manga-chapter');
+          const chapterTitle = ancestorElement?.querySelector('a')?.textContent.trim() || 'Unknown Title';
+  
+          // Construct the unlock request URL
+          const unlockRequestURL = getSelector(window.location.origin).unlockRequestURL;
+          // TODO: Update the URL structure as needed based on the actual endpoint
+  
+          // Only push if chapterId is available to ensure data integrity
+          if (chapterId) {
+              seriesDetails.chapters.push({
+                  chapterTitle,
+                  chapterDetails: {
+                      chapterId,
+                      nonce,
+                      action,
+                      unlockRequestURL
+                  }
+              });
+          } else {
+              console.warn(`Chapter ID not found for chapter titled "${chapterTitle}".`);
+          }
+      });
+  
+      console.log(JSON.stringify(seriesDetails, null, 2));
+  }
+
 
   /**
    * Main initialization function
