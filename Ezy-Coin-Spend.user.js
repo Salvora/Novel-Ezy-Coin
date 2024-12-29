@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.1
+// @version     1.6.2
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -130,11 +130,11 @@
    */
   function setButtonState(button, action) {
     if (action === 'disable') {
-      button.disabled = true;            // Disable the button functionality
-      button.classList.add('disabled');  // Apply the 'disabled' visual style
+      button.disabled = true; // Disable the button functionality
+      button.classList.add('disabled'); // Apply the 'disabled' visual style
       console.log("Button disabled (functionally and visually).");
     } else if (action === 'enable') {
-      button.disabled = false;           // Enable the button functionality
+      button.disabled = false; // Enable the button functionality
       button.classList.remove('disabled');// Remove the 'disabled' visual style
       console.log(`Button enabled (functionally and visually).`);
     } else {
@@ -471,7 +471,7 @@
       console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
       return;
     } finally {
-      setProcessingCoin(coin, 'delete');  // Remove coin from the set
+      setProcessingCoin(coin, 'delete'); // Remove coin from the set
       elementSpinner(coin, false);
       // Reconnect the observer
       if (observer) {
@@ -810,7 +810,7 @@
           setButtonState(coin, 'enable'); // Re-enable the button
           console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
         } finally {
-          setProcessingCoin(coin, 'delete');  // Ensure coin is removed from the set
+          setProcessingCoin(coin, 'delete'); // Ensure coin is removed from the set
           elementSpinner(coin, false);
         }
       }));
