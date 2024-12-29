@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.5
+// @version     1.6.6
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -93,7 +93,6 @@
             await autoUnlockChapters();
         } else if (!autoUnlockSetting && isChapterPage) {
             console.log("Auto Unlock disabled.");
-            // Optionally, you can add logic here to halt any ongoing auto unlock processes
         }
     });
   }
@@ -736,12 +735,17 @@
   }
 
   /**
-   * Function to limit concurrency of tasks
-   * @param {number} limit - The concurrency limit
-   * @param {Array<Function>} tasks - The tasks to execute
-   * @returns {Promise<Array>} The results of the tasks
+   * Executes asynchronous tasks with a specified concurrency limit.
+   *
+   * @param {number} limit - The maximum number of concurrent tasks.
+   * @param {Array<Function>} tasks - An array of functions that return Promises.
+   * @returns {Promise<Array>} - Resolves when all tasks have completed.
+   * @throws {Error} - If the concurrency limit is less than or equal to zero.
    */
   async function withConcurrencyLimit(limit, tasks) {
+    if (limit < 0) {
+      throw new Error("Concurrency limit must be greater than 0");
+    }
     if (limit === 0) {
       // If limit is 0, execute all tasks at once
       const promises = tasks.map(task => task());
@@ -749,18 +753,20 @@
     }
 
     const results = [];
-    const executing = [];
+    const executing = new Set();
 
     for (const task of tasks) {
       const p = task();
       results.push(p);
+      executing.add(p);
 
-      if (executing.length >= limit) {
-        await Promise.race(executing);
+      // When the number of executing tasks reaches the limit, wait for any to finish
+      if (executing.size >= limit) {
+          await Promise.race(executing);
       }
 
-      const e = p.then(() => executing.splice(executing.indexOf(e), 1));
-      executing.push(e);
+      // Once a task completes, remove it from the executing set
+      p.finally(() => executing.delete(p));
     }
 
     return Promise.all(results);
@@ -794,8 +800,8 @@
       if (!userConfirmed) {
         return;
       }
-
-      const coinElements = Array.from(document.querySelectorAll(getSelector(window.location.origin).premiumChapterIndicator)).reverse();
+      const premiumChapterIndicator = getSelector(window.location.origin).premiumChapterIndicator;
+      const coinElements = Array.from(document.querySelectorAll(premiumChapterIndicator)).reverse();
 
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
         try {
