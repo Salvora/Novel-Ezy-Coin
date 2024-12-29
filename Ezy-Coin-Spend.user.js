@@ -32,7 +32,7 @@
   let autoUnlockSetting = GM_getValue(`autoUnlock_${window.location.hostname}`, false); // Initialize the variable from settings
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  const concurrencyLimit = 0; // Limit the number of concurrent unlock requests
+  let concurrencyLimit = 0; // Limit the number of concurrent unlock requests
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -66,21 +66,80 @@
     return selectorCache.get(url);
   }
 
-  // Function to create the settings UI
+  /**
+   * Function to create the settings UI
+   */
   function settingsUI() {
     const template = GM_getResourceText(SETTINGS.resourceName);
-  
+
     const container = document.createElement('div');
     container.innerHTML = template;
     document.body.appendChild(container.firstElementChild);
-  
+
     const checkbox = document.getElementById(SETTINGS.checkboxId);
     checkbox.checked = autoUnlockSetting;
-  
-    checkbox.addEventListener('change', e => {
-      autoUnlockSetting = e.target.checked; // Update the variable
-      GM_setValue(`autoUnlock_${window.location.hostname}`, autoUnlockSetting);
+
+    checkbox.addEventListener('change', async (e) => {
+        autoUnlockSetting = e.target.checked; // Update the variable
+        GM_setValue(`autoUnlock_${window.location.hostname}`, autoUnlockSetting);
+        console.log(`Auto Unlock setting changed to: ${autoUnlockSetting}`);
+
+        // Determine if the current page is a chapter page
+        const isChapterPage = chapterPageKeywordList.some(keyword => window.location.pathname.includes(`/${keyword}`));
+
+        if (autoUnlockSetting && isChapterPage) {
+            console.log("Auto Unlock enabled on a chapter page. Initiating auto unlock...");
+            await autoUnlockChapters();
+        } else if (!autoUnlockSetting && isChapterPage) {
+            console.log("Auto Unlock disabled.");
+            // Optionally, you can add logic here to halt any ongoing auto unlock processes
+        }
     });
+  }
+
+
+  /**
+   * Function to add or remove a coin from processingCoins
+   * @param {HTMLElement} coin - The coin element
+   * @param {string} action - `'add'` to add the coin, `'delete'` to remove it
+   */
+  function setProcessingCoin(coin, action) {
+    if (action === 'add') {
+      if (!processingCoins.has(coin)) {
+        processingCoins.add(coin);
+        console.log("Coin added to processingCoins");
+      } else {
+        console.warn("Coin is already in processingCoins");
+      }
+    } else if (action === 'delete') {
+      if (processingCoins.has(coin)) {
+        processingCoins.delete(coin);
+        console.log("Coin removed from processingCoins");
+      } else {
+        console.warn("Coin was not found in processingCoins");
+      }
+    } else {
+      console.error("Invalid action. Use 'add' or 'delete'.");
+    }
+  }
+
+  /**
+   * Function to enable or disable the button both functionally and visually
+   * @param {HTMLElement} button - The button element
+   * @param {string} action - `'enable'` to enable, `'disable'` to disable
+   */
+  function setButtonState(button, action) {
+    if (action === 'disable') {
+      button.disabled = true;            // Disable the button functionality
+      button.classList.add('disabled');  // Apply the 'disabled' visual style
+      console.log("Button disabled (functionally and visually).");
+    } else if (action === 'enable') {
+      button.disabled = false;           // Enable the button functionality
+      button.classList.remove('disabled');// Remove the 'disabled' visual style
+      console.log(`Button enabled (functionally and visually).`);
+    } else {
+      console.error(`Invalid action "${action}" provided to setButtonState. Use 'enable' or 'disable'.`);
+    }
   }
 
   /**
@@ -241,20 +300,71 @@
     try {
       console.log("Checking balance for cost:", cost);
       balance = await getDynamicBalance();
+
       if (balance === null) {
-        console.error("Failed to get dynamic balance");
+        console.error("Failed to retrieve balance. Balance is null.");
         return false;
       }
+
       if (cost > balance) {
-        console.error(`Balance: ${balance} is not enough for purchasing the chapter with cost: ${cost} !!!`);
+        console.error(`Balance (${balance.toLocaleString()}) is not enough for purchasing the chapter with cost: ${cost.toLocaleString()} !!!`);
         return false;
       }
-      console.log(`Balance: ${balance} is enough for purchasing the chapter(s) with cost: ${cost}`);
+
+      console.log(`Balance (${balance.toLocaleString()}) is sufficient for purchasing the chapter(s) with cost: ${cost.toLocaleString()}`);
       return true;
     } catch (error) {
       console.error("Error checking balance:", error);
-      return false;
+      return false; // Return false to indicate insufficient balance or error
     }
+  }
+
+  /**
+   * Extracts the coin cost from an element.
+   * Handles both textContent and class-based indicators.
+   *
+   * @param {HTMLElement} element - The element containing the coin cost.
+   * @returns {number|null} The extracted coin cost or null if not found.
+   */
+  function getCoinCost(element) {
+    if (!element || !(element instanceof HTMLElement)) {
+        console.error("Invalid element provided to getCoinCost.");
+        return null;
+    }
+
+    // 1. Attempt to extract from textContent
+    const rawText = element.textContent.replace(/,/g, '').trim();
+    let coinCost = parseInt(rawText, 10);
+
+    if (!isNaN(coinCost)) {
+        return coinCost;
+    }
+
+    // 2. Attempt to extract from class names (e.g., 'coin-6')
+    const coinClass = Array.from(element.classList).find(cls => cls.startsWith('coin-'));
+
+    if (coinClass) {
+        const parts = coinClass.split('-');
+        if (parts.length >= 2) {
+            const coinNumber = parseInt(parts[1], 10);
+            if (!isNaN(coinNumber)) {
+                return coinNumber;
+            }
+        }
+    }
+
+    // 3. Optionally, handle data attributes if available
+    // Example: <span data-coin-cost="6">...</span>
+    if (element.dataset && element.dataset.coinCost) {
+        const dataCoinCost = parseInt(element.dataset.coinCost, 10);
+        if (!isNaN(dataCoinCost)) {
+            return dataCoinCost;
+        }
+    }
+
+    // Unable to find coin cost
+    console.error("Unable to extract coin cost from element:", element);
+    return null;
   }
 
   /**
@@ -329,10 +439,11 @@
       return;
     }
 
-    processingCoins.add(coin); // Add coin to the set
-    coin.disabled = true; // Disable the coin element to prevent multiple clicks
+    setProcessingCoin(coin, 'add'); // Add coin to the set
+    setButtonState(coin, 'disable'); // Disable the button
     coin.classList.add("clicked");
     console.log("Coin clicked");
+    elementSpinner(coin, true);
 
     // Temporarily disconnect the observer
     if (observer) {
@@ -342,22 +453,25 @@
     try {
       setTimeout(() => coin.classList.remove("clicked"), 100);
       const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ''), 10);
-      elementSpinner(coin, true);
       if (!(await checkBalance(chapterCoinCost))) {
         await flashCoin(coin, false);
+        setButtonState(coin, 'enable'); // Re-enable the coin element
         return;
       }
-      const result = await unlockChapter(coin);
+      const result = await unlockChapter(coin, 'series-page');
       if (!result) {
         await flashCoin(coin, false);
+        setButtonState(coin, 'enable'); // Re-enable the coin element
         console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
+        return;
       }
     } catch (error) {
       await flashCoin(coin, false);
+      setButtonState(coin, 'enable'); // Re-enable the coin element
       console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
+      return;
     } finally {
-      processingCoins.delete(coin); // Remove coin from the set
-      coin.disabled = false; // Re-enable the coin element
+      setProcessingCoin(coin, 'delete');  // Remove coin from the set
       elementSpinner(coin, false);
       // Reconnect the observer
       if (observer) {
@@ -393,38 +507,71 @@
     }, 1000);
   }
 
+
+  function getChapterId (coin, page) {
+    const indicator = getSelector(window.location.origin).chapterIdIndicator;
+    let chapterElement;
+    if (page === 'series-page') {
+      chapterElement = coin.closest(".wp-manga-chapter");
+    } else if (page === 'chapter-page') {
+      chapterElement = coin;
+    } else {
+      console.error(`Invalid page type "${page}" provided. Use 'series-page' or 'chapter-page'.`);
+      return { chapterId: null, chapterElement: null };
+    }
+
+    // Check if chapterElement was successfully assigned
+    if (!chapterElement) {
+      console.error("Chapter element not found.");
+      return { chapterId: null, chapterElement: null };
+    }
+
+    // Extract the chapter ID from the class name
+    const chapterClass = Array.from(chapterElement?.classList || [])
+      .find(className => className.startsWith(indicator)) || null;
+
+    if (!chapterClass) {
+        console.error("Chapter class not found.");
+        return { chapterId: null, chapterElement: null };
+    }
+
+    const chapterId = chapterClass.split('-')[2] || null;
+    return { chapterId, chapterElement };
+  }
+
+  function getNonceElement() {
+    return document.querySelector(getSelector(window.location.origin).noncePlaceholder);
+  }
+
   /**
    * Function to unlock a chapter
    * @param {HTMLElement} coin - The coin element
    * @returns {Promise<boolean>} True if the chapter was unlocked successfully, false otherwise
    */
-  async function unlockChapter(coin) {
+  async function unlockChapter(coin, origin) {
     if (!coin || !(coin instanceof Element)) {
       console.error("Invalid coin element");
       return false;
     }
-    const chapterElement = coin.closest(".wp-manga-chapter");
-    // Use classList to find the class that starts with data-chapter-
-    const chapterClass = Array.from(chapterElement?.classList || [])
-                          .find(className => className.startsWith('data-chapter-'));
-    // Extract the number from the class name
-    const chapterId = chapterClass?.split('-')[2];
+    const { chapterId, chapterElement } = getChapterId(coin, origin);
+    const nonce = getNonceElement()?.value;
 
-    const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
-
-    if (!chapterElement || !chapterId || !nonceElement) {
+    if (!chapterElement || !chapterId || !nonce) {
       console.error("Required element not found");
-      coin.disabled = false; // Re-enable the coin element if required elements are not found
-      processingCoins.delete(coin); // Remove coin from the set
       return false;
     }
 
-    elementSpinner(coin, true);
+    // Extract the coin cost using the universal function
+    const chapterCoinCost = getCoinCost(coin);
+    if (chapterCoinCost === null) {
+        console.error("Unable to determine coin cost.");
+        return false;
+    }
 
     const postData = new URLSearchParams({
       action: getSelector(window.location.origin).unlockAction,
       chapter: chapterId,
-      nonce: nonceElement.value,
+      nonce: nonce,
     });
 
     try {
@@ -448,11 +595,11 @@
         // Update the balance element
         try {
           // Attempt to update the balance
-          await updateBalance(parseInt(coin.textContent.replace(/,/g, ''), 10));
+          await updateBalance(chapterCoinCost);
         } catch (error) {
           console.error('Error calling updateBalance:', error);
         }
-
+        
         // Remove the premium-block class from the chapter element
         chapterElement.classList.remove(getSelector(window.location.origin).premiumIndicator);
 
@@ -469,32 +616,33 @@
           if (iconElement) {
             iconElement.classList.remove('fa-lock');
             iconElement.classList.add('fa-lock-open');
+          } else {
+            console.warn("Lock Icon element not found! Cannot update the icon class");
           }
 
           // Clone the <a> element to remove all event listeners
           const newLinkElement = linkElement.cloneNode(true);
           linkElement.parentNode.replaceChild(newLinkElement, linkElement);
+        } else {
+          console.warn("Link element not found! Cannot update the href attribute");
         }
 
         // Remove the event listener after success
         coin.removeEventListener('click', handleCoinClick);
 
         // Call findAndLinkifyCoins to update the total cost and button text
-        debouncedFindAndLinkifyCoins();
+        if (origin === 'series-page') {
+          debouncedFindAndLinkifyCoins();
+        }
         return true;
       } else {
         console.error("Failed to buy chapter:", data.data.message);
-        coin.disabled = false; // Re-enable the coin element if the request fails
         return false;
       }
 
     } catch (error) {
       console.error("Error:", error);
-      coin.disabled = false; // Re-enable the coin element if an error occurs
       return false;
-    } finally {
-      processingCoins.delete(coin); // Remove coin from the set
-      elementSpinner(coin, false);
     }
   }
 
@@ -533,16 +681,19 @@
         const updateButtonContent = () => {
           // Clear existing content
           buttonText.textContent = 'Unlock All ';
-        
+          
           // Create and append the icon element
           const icon = document.createElement('i');
           icon.classList.add('fas', 'fa-coins');
           buttonText.appendChild(icon);
-        
+          
           // Append the total cost text
           const costText = document.createTextNode(` ${totalCost}`);
           buttonText.appendChild(costText);
-          totalCost === 0 ? button.classList.add('disabled') : button.classList.remove('disabled');
+          
+          // Update the button's state based on totalCost
+          console.log("Updating the UnlockAllButton State")
+          setButtonState(button, totalCost === 0 ? 'disable' : 'enable');
         };
 
         updateButtonContent();
@@ -550,7 +701,6 @@
         elementSpinner(button, false);
         targetElement.appendChild(button);
         console.log("Button inserted successfully");
-
 
         // Expose updateButtonContent for external calls
         button.updateContent = updateButtonContent;
@@ -560,7 +710,7 @@
           button.style.width = `${originalWidth}px`; // Set button width to its original width
           buttonText.style.display = "none"; // Hide button text
           elementSpinner(button, true); // Show spinner
-          button.disabled = true; // Disable the button
+          setButtonState(button, 'disable'); // Disable the button
 
           try {
             await unlockAllChapters();
@@ -568,7 +718,7 @@
             console.error("Error unlocking all chapters:", error);
           } finally {
             elementSpinner(button, false); // Hide spinner
-            updateButtonContent(); // Restore original button content dynamically
+            updateButtonContent(); // Restore original button content dynamically then enable or disable button depending on totalcost
             buttonText.style.display = "inline"; // Show button text
             button.style.width = 'auto'; // Reset button width to auto
           }
@@ -617,10 +767,16 @@
    */
   async function unlockAllChapters() {
     try {
-      if (!(await checkBalance(totalCost))) {
-        alert(`Balance (${balance}) is not enough to unlock all chapters! (${totalCost})`);
+      const hasEnoughBalance = await checkBalance(totalCost);
+      if (!hasEnoughBalance) {
+        if (balance === null) {
+          alert("Unable to retrieve your balance. Please check your network connection and try again.");
+        } else {
+          alert(`Balance (${balance.toLocaleString()}) is not enough to unlock all chapters! (Cost: ${totalCost.toLocaleString()})`);
+        }
         return;
       }
+
       if (totalCost === 0) {
         return;
       }
@@ -640,16 +796,22 @@
 
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
         try {
-          const result = await unlockChapter(coin);
+          setProcessingCoin(coin, 'add');
+          setButtonState(coin, 'disable'); // Disable the button
+          elementSpinner(coin, true);
+          const result = await unlockChapter(coin, 'series-page');
           if (!result) {
             await flashCoin(coin, false);
             console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
+            setButtonState(coin, 'enable'); // Re-enable the button
           }
         } catch (error) {
           await flashCoin(coin, false);
+          setButtonState(coin, 'enable'); // Re-enable the button
           console.error(`Error unlocking chapter for coin: ${coin.textContent}`, error);
         } finally {
-          processingCoins.delete(coin); // Ensure coin is removed from the set
+          setProcessingCoin(coin, 'delete');  // Ensure coin is removed from the set
+          elementSpinner(coin, false);
         }
       }));
       console.log("All chapters have been processed!");
@@ -657,6 +819,20 @@
       console.error("Error processing chapters:", error);
       alert("An error occurred while processing chapters. Please try again.");
     }
+  }
+
+  /**
+   * Clears all cached pages.
+   */
+  async function clearAllCachedPages() {
+    const keys = await GM.listValues();
+    for (const key of keys) {
+      if (key.startsWith('preloadedPage_')) {
+        await GM.deleteValue(key);
+        console.log(`Cleared cached content for key: ${key}`);
+      }
+    }
+    console.log('All cached pages have been cleared.');
   }
 
   /**
@@ -676,86 +852,33 @@
       return;
     }
     
-    // Check if the next chapter is locked
-    if (!nextButton.classList.contains("premium-block")) {
-      console.log("Next chapter is already unlocked");
+    const checkAndMarkNextChapter = () => {
+      const linkElement = nextButton.querySelector('a');
+      if (!linkElement) {
+          console.warn("Link element not found.");
+          return false;
+      }
+  
+      const isUnlocked = !nextButton.classList.contains("premium-block");
+      const addClass = isUnlocked ? "unlocked-green" : "locked-red";
+      const removeClass = isUnlocked ? "locked-red" : "unlocked-green";
+  
+      console.log(`Next chapter is ${isUnlocked ? "already unlocked" : "locked"}`);
+  
+      linkElement.classList.add(addClass);
+      linkElement.classList.remove(removeClass);
+  
+      return isUnlocked;
+    };
 
-    const linkElement = nextButton.querySelector('a');
-    if (linkElement) {
-      linkElement.classList.add("unlocked-green");
-    }
+    // Initial check before attempting to unlock
+    if (checkAndMarkNextChapter()) {
       return;
     }
-
-    // Extract the chapter ID from the class name
-    const chapterClass = Array.from(chapterElement?.classList || [])
-                          .find(className => className.startsWith('data-chapter-'));
-    // Extract the number from the class name
-    const chapterId = chapterClass?.split('-')[2];
-    if (!chapterId) {
-      console.error("Chapter ID not found in the class name");
-      return;
-    }
-
-    console.log("Next chapter is locked, chapter ID:", chapterID);
-
-    const nonceElement = document.querySelector(getSelector(window.location.origin).noncePlaceholder);
-    if (!nonceElement) {
-      console.error("Nonce element not found");
-      return;
-    }
-
-    const postData = new URLSearchParams({
-      action: getSelector(window.location.origin).unlockAction,
-      chapter: chapterID,
-      nonce: nonceElement.value,
-    });
 
     try {
-      const response = await sendRequest(getSelector(window.location.origin).unlockRequestURL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "X-Requested-With": "XMLHttpRequest",
-        },
-        body: postData.toString(),
-      });
-
-      if (!response.ok) {
-        console.error("Network response was not ok");
-        await flashCoin(nextButton, false);
-        return;
-      }
-      const data = await response.json();
-      console.log("Successfully sent the request:", data);
-      if (data.success && data.data.status) {
-        // Update the balance element
-        try {
-          // Attempt to update the balance
-          await updateBalance(parseInt(nextButton.textContent.replace(/,/g, ''), 10));
-        } catch (error) {
-          console.error('Error calling updateBalance:', error);
-        }
-        linkElement.classList.add("unlocked-green");
-        // Remove the premium-block class from the next chapter button
-        nextButton.classList.remove(getSelector(window.location.origin).premiumIndicator);
-
-        // Update the href attribute of the <a> element with the URL from the response
-        const linkElement = nextButton.querySelector('a');
-        if (linkElement) {
-          linkElement.href = data.data.url;
-
-          // Clone the <a> element to remove all event listeners
-          const newLinkElement = linkElement.cloneNode(true);
-          linkElement.parentNode.replaceChild(newLinkElement, linkElement);
-        }
-
-        console.log("Next chapter unlocked successfully (AutoUnlocked):", chapterID);
-      } else {
-        console.error("Failed to buy chapter:", data.data.message);
-        await flashCoin(nextButton, false);
-      }
-
+      await unlockChapter(nextButton, 'chapter-page');
+      checkAndMarkNextChapter();
     } catch (error) {
       console.error("Error:", error);
       await flashCoin(nextButton, false);
@@ -803,8 +926,13 @@
         } else {
           console.error("Target div not found");
         }
+      } else if (isChapterPage) {
+        if (autoUnlockSetting) {
+          console.log("Auto unlock is enabled. Starting auto unlock...");
+          autoUnlockChapters();
+        }
       } else {
-        console.log("Coin unlocking is not running on a chapter page");
+          console.log("Coin unlocking is not running on a chapter page");
       }
     } catch (error) {
       console.error("Error during initialization:", error);

@@ -137,6 +137,16 @@
   color: #fff !important;
 }
 
+.locked-red {
+  background-color: red !important;
+  color: white !important;
+}
+
+.locked-red:hover {
+  background-color: #0f0f0f !important; /* Adjust the color for the hover effect */
+  color: #fff !important;
+}
+
 .flash-red {
   animation: flash-red-animation 1s !important;
   background-color: red !important;
