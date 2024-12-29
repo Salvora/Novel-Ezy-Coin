@@ -531,8 +531,17 @@
         const buttonText = document.createElement("span");
 
         const updateButtonContent = () => {
-          buttonText.innerHTML = `Unlock All <i class="fas fa-coins"></i> ${totalCost}`;
-          button.disabled = totalCost === 0;
+          // Clear existing content
+          buttonText.textContent = 'Unlock All ';
+        
+          // Create and append the icon element
+          const icon = document.createElement('i');
+          icon.classList.add('fas', 'fa-coins');
+          buttonText.appendChild(icon);
+        
+          // Append the total cost text
+          const costText = document.createTextNode(` ${totalCost}`);
+          buttonText.appendChild(costText);
           totalCost === 0 ? button.classList.add('disabled') : button.classList.remove('disabled');
         };
 
