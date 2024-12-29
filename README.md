@@ -40,6 +40,7 @@ Ezy-Coin-Spend is a userscript designed to help you spend your coins to unlock c
 
 - [Hiraeth Translation](https://hiraethtranslation.com/)
 - [Darkstar Translations](https://darkstartranslations.com/)
+- [Luminary Novels](https://luminarynovels.com)
 
 Feel free to suggest more or create pull requests.
 
@@ -56,8 +57,9 @@ This script is designed to prevent spending more than required. Please, report a
 
 ## TO DO
 
-- Make balance calculation dynamic
 - Auto-unlocking
+- Pre-Load Chapters
+- avoid manipulating innerHTML with CSS
 
 ## Contributing
 

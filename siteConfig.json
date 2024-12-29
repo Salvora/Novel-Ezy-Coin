@@ -1,0 +1,47 @@
+{
+    "https://darkstartranslations.com": {
+      "chapterList": "#manga-chapters-holder",
+      "buttonLocation": "#init-links",
+      "balancePlaceholder": ".c-user_menu li:first-child a",
+      "balanceString": "Balance:",
+      "balanceRegex": "Balance:\\s*([\\d,]+)",
+      "coinPage": "https://darkstartranslations.com/user-settings/",
+      "coinPlaceholder": ".c-user_menu",
+      "chapterIdIndicator": "data-chapter-",
+      "premiumChapterIndicator": ".premium-block .coin",
+      "premiumIndicator": "premium-block",
+      "noncePlaceholder": "input[name='wp-manga-coin-nonce']",
+      "unlockRequestURL": "https://darkstartranslations.com/wp-admin/admin-ajax.php",
+      "unlockAction": "wp_manga_buy_chapter"
+    },
+    "https://luminarynovels.com": {
+      "chapterList": "#manga-chapters-holder",
+      "buttonLocation": "#init-links",
+      "balancePlaceholder": ".c-user_menu li:first-child a",
+      "balanceString": "Balance:",
+      "balanceRegex": "Balance:\\s*([\\d,]+)",
+      "coinPage": "https://luminarynovels.com/user-settings/",
+      "coinPlaceholder": ".c-user_menu",
+      "chapterIdIndicator": "data-chapter-",
+      "premiumChapterIndicator": ".premium-block .coin",
+      "premiumIndicator": "premium-block",
+      "noncePlaceholder": "input[name='wp-manga-coin-nonce']",
+      "unlockRequestURL": "https://luminarynovels.com/wp-admin/admin-ajax.php",
+      "unlockAction": "wp_manga_buy_chapter"
+    },
+    "https://hiraethtranslation.com": {
+      "chapterList": ".page-content-listing.single-page",
+      "buttonLocation": "#init-links",
+      "balancePlaceholder": ".c-user_menu li:first-child a",
+      "balanceString": "Balance:",
+      "balanceRegex": "Balance:\\s*([\\d,]+)",
+      "coinPage": "https://hiraethtranslation.com/user-settings/",
+      "coinPlaceholder": ".c-user_menu",
+      "chapterIdIndicator": "data-chapter-",
+      "premiumChapterIndicator": ".premium-block .coin",
+      "premiumIndicator": "premium-block",
+      "noncePlaceholder": "input[name='wp-manga-coin-nonce']",
+      "unlockRequestURL": "https://hiraethtranslation.com/wp-admin/admin-ajax.php",
+      "unlockAction": "wp_manga_buy_chapter"
+    }
+  }
