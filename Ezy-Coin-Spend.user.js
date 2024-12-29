@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.2
+// @version     1.6.3
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -231,14 +231,14 @@
 
       while (true) {
         const { value, done } = await reader.read();
-        
+
         if (done) {
           const doc = parseHTML(content + decoder.decode(), coinPageBaseURL);
           return doc ? getBalance(doc) : null;
         }
 
         content += decoder.decode(value, { stream: true });
-        
+
         if (content.includes(getSelector(window.location.origin).balanceString)) {
           controller.abort();
           const doc = parseHTML(content, coinPageBaseURL);
@@ -266,7 +266,7 @@
       await new Promise(resolve => setTimeout(resolve, 10)); // Wait for the lock to be released
     }
     balanceLock = true; // Acquire the lock
-  
+
     try {
       if (typeof delta !== 'number' || isNaN(delta)) {
         throw new Error('Invalid delta value for balance update');
@@ -433,7 +433,7 @@
   async function handleCoinClick(event) {
     event.preventDefault();
     const coin = event.currentTarget;
-    
+
     if (processingCoins.has(coin)) {
       console.log("Coin is already being processed, ignoring click");
       return;
@@ -599,7 +599,7 @@
         } catch (error) {
           console.error('Error calling updateBalance:', error);
         }
-        
+
         // Remove the premium-block class from the chapter element
         chapterElement.classList.remove(getSelector(window.location.origin).premiumIndicator);
 
@@ -681,16 +681,16 @@
         const updateButtonContent = () => {
           // Clear existing content
           buttonText.textContent = 'Unlock All ';
-          
+
           // Create and append the icon element
           const icon = document.createElement('i');
           icon.classList.add('fas', 'fa-coins');
           buttonText.appendChild(icon);
-          
+
           // Append the total cost text
           const costText = document.createTextNode(` ${totalCost}`);
           buttonText.appendChild(costText);
-          
+
           // Update the button's state based on totalCost
           console.log("Updating the UnlockAllButton State")
           setButtonState(button, totalCost === 0 ? 'disable' : 'enable');
@@ -704,7 +704,7 @@
 
         // Expose updateButtonContent for external calls
         button.updateContent = updateButtonContent;
-        
+
         button.addEventListener("click", async () => {
           const originalWidth = button.offsetWidth; // Save original button width
           button.style.width = `${originalWidth}px`; // Set button width to its original width
@@ -792,7 +792,6 @@
       }
 
       const coinElements = Array.from(document.querySelectorAll(getSelector(window.location.origin).premiumChapterIndicator)).reverse();
-      
 
       await withConcurrencyLimit(concurrencyLimit, coinElements.map(coin => async () => {
         try {
@@ -841,7 +840,7 @@
   async function autoUnlockChapters() {
     const globalConcurrencyLimit = concurrencyLimit;
     concurrencyLimit = 1; // Set concurrency limit to 1 for auto unlock
-    
+
     const headNextButton = document.getElementById("manga-reading-nav-head")?.querySelector(".nav-next");
     const footNextButton = document.getElementById("manga-reading-nav-foot")?.querySelector(".nav-next");
 
@@ -851,23 +850,22 @@
       console.log("Next button not found! Possibly, this is the last chapter.");
       return;
     }
-    
+
     const checkAndMarkNextChapter = () => {
       const linkElement = nextButton.querySelector('a');
       if (!linkElement) {
           console.warn("Link element not found.");
           return false;
       }
-  
+
       const isUnlocked = !nextButton.classList.contains("premium-block");
       const addClass = isUnlocked ? "unlocked-green" : "locked-red";
       const removeClass = isUnlocked ? "locked-red" : "unlocked-green";
-  
+
       console.log(`Next chapter is ${isUnlocked ? "already unlocked" : "locked"}`);
-  
+
       linkElement.classList.add(addClass);
       linkElement.classList.remove(removeClass);
-  
       return isUnlocked;
     };
 
