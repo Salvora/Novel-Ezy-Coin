@@ -937,7 +937,7 @@
               seriesDetails.chapters.push({
                   chapterTitle,
                   chapterDetails: {
-                      chapterId,
+                      chapter: chapterId,
                       nonce,
                       action,
                       unlockRequestURL
