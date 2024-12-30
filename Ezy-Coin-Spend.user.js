@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.7
+// @version     1.6.8
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -897,7 +897,7 @@
    * @param {NodeListOf<HTMLElement>} coinElements - A collection of coin elements representing chapters.
    *
    * @typedef {Object} ChapterDetails
-   * @property {string} chapterId - The unique identifier of the chapter.
+   * @property {string} chapter - The unique identifier of the chapter.
    * @property {string} nonce - The nonce value for security purposes.
    * @property {string} action - The action to be performed for unlocking the chapter.
    * @property {string} unlockRequestURL - The URL to request unlocking the chapter.
@@ -913,42 +913,49 @@
    * @returns {void}
    */
   function logDetails(coinElements) {
-      const seriesTitle = getSeriesTitle();
-      const seriesDetails = {
-          seriesTitle,
-          chapters: []
-      };
-  
-      coinElements.forEach(coin => {
-          const { chapterId } = getChapterId(coin, 'series-page');
-          const nonce = getNonceElement()?.value;
-          const action = getSelector(window.location.origin).unlockAction;
-  
-          // Find the ancestor element that contains the chapter title
-          const ancestorElement = coin.closest('.wp-manga-chapter');
-          const chapterTitle = ancestorElement?.querySelector('a')?.textContent.trim() || 'Unknown Title';
-  
-          // Construct the unlock request URL
-          const unlockRequestURL = getSelector(window.location.origin).unlockRequestURL;
-          // TODO: Update the URL structure as needed based on the actual endpoint
-  
-          // Only push if chapterId is available to ensure data integrity
-          if (chapterId) {
-              seriesDetails.chapters.push({
-                  chapterTitle,
-                  chapterDetails: {
-                      chapter: chapterId,
-                      nonce,
-                      action,
-                      unlockRequestURL
-                  }
-              });
-          } else {
-              console.warn(`Chapter ID not found for chapter titled "${chapterTitle}".`);
-          }
-      });
-  
-      console.log(JSON.stringify(seriesDetails, null, 2));
+    const seriesMap = new Map();
+
+    coinElements.forEach(coin => {
+        const { chapterId } = getChapterId(coin, 'series-page');
+        const nonce = getNonceElement()?.value;
+        const action = getSelector(window.location.origin).unlockAction;
+
+        // Find the ancestor element that contains the chapter title
+        const ancestorElement = coin.closest('.wp-manga-chapter');
+        const chapterTitle = ancestorElement?.querySelector('a')?.textContent.trim() || 'Unknown Title';
+
+        // Construct the unlock request URL
+        const unlockRequestURL = getSelector(window.location.origin).unlockRequestURL;
+
+        // Only push if chapterId is available to ensure data integrity
+        if (chapterId) {
+            const seriesTitle = getSeriesTitle();
+            if (!seriesMap.has(seriesTitle)) {
+                seriesMap.set(seriesTitle, []);
+            }
+
+            seriesMap.get(seriesTitle).push({
+                chapterTitle,
+                chapterDetails: {
+                    chapter: chapterId,
+                    nonce,
+                    action,
+                    unlockRequestURL
+                }
+            });
+        } else {
+            console.warn(`Chapter ID not found for chapter titled "${chapterTitle}".`);
+        }
+    });
+
+    const seriesArray = Array.from(seriesMap.entries()).map(([seriesTitle, chapters]) => ({
+        seriesTitle,
+        chapters
+    }));
+
+    const result = { series: seriesArray };
+
+    console.log(JSON.stringify(result, null, 2));
   }
 
 
