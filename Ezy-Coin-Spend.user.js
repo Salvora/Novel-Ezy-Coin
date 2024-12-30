@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.6.8
+// @version     1.6.9
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -895,21 +895,6 @@
    * Logs detailed information about each chapter associated with the provided coin elements.
    *
    * @param {NodeListOf<HTMLElement>} coinElements - A collection of coin elements representing chapters.
-   *
-   * @typedef {Object} ChapterDetails
-   * @property {string} chapter - The unique identifier of the chapter.
-   * @property {string} nonce - The nonce value for security purposes.
-   * @property {string} action - The action to be performed for unlocking the chapter.
-   * @property {string} unlockRequestURL - The URL to request unlocking the chapter.
-   *
-   * @typedef {Object} ChapterInfo
-   * @property {string} chapterTitle - The title of the chapter.
-   * @property {ChapterDetails} chapterDetails - Detailed information about the chapter.
-   *
-   * @typedef {Object} SeriesDetails
-   * @property {string} seriesTitle - The title of the series.
-   * @property {ChapterInfo[]} chapters - An array of chapter details.
-   *
    * @returns {void}
    */
   function logDetails(coinElements) {
