@@ -1,3 +1,4 @@
 /.vscode
 /send-requests.js
-/data.json
+/send-requests-data.json
+*.py
