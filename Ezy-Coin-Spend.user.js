@@ -470,7 +470,9 @@
         // Create spinner element if it doesn't exist
         spinner = document.createElement("span");
         spinner.classList.add("spinner");
-        spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+        const icon = document.createElement("i");
+        icon.classList.add("fas", "fa-spinner", "fa-spin");
+        spinner.appendChild(icon);
         element.appendChild(spinner);
       }
       spinner.classList.add("show"); // Show spinner
