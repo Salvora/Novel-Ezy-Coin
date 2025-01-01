@@ -20,6 +20,7 @@ Ezy-Coin-Spend is a userscript designed to help you spend your coins to unlock c
 
 - Adds clickable buttons for each chapter to immediately unlock desired chapters without visiting the chapters.
 - Adds a button to unlock all locked chapters.
+- Optional AutoUnlock for better reading experience when reading chapter by chapter
 
 ![Unlock All Button](Images/unlockAll-ss1.png)
 
@@ -53,13 +54,9 @@ Feel free to suggest more or create pull requests.
 
 Once installed, the script will automatically run on the supported sites. You can unlock chapters by clicking on the coin elements or unlock all of them with the button.
 
-This script is designed to prevent spending more than required. Please, report any oversights. (I wasted a lot of coins to prevent double spending.) 
+This script is designed to prevent spending more than required. Please, report any oversights. (I wasted a lot of coins to prevent double spending.)
 
 ## TO DO
-
-- Auto-unlocking
-- Pre-Load Chapters
-- avoid manipulating innerHTML with CSS
 
 ## Contributing
 
