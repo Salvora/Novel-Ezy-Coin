@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.7.0
+// @version     1.7.1
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
+// @grant        GM_registerMenuCommand
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/styles.css?v=1.6.9#sha256=bde2db910198b249808ca784af346d864713b5f9a7a46445d51c716598e500df
 // @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/ezy-coin-settings.html?v=1.0.2#sha256=2784e6334415a4b53711b4cf13175f66db1d75711b7176b6d68aba0d1e1cd964
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/siteConfig.json?v=1.0.8#sha256=fc1090f795b62fd6bd022c111d4d74b1de67bf50e1e91de612beb79ad131d8b3
@@ -24,7 +25,7 @@
 // ==/UserScript==
 
 (function () {
-  "use strict";
+  ("use strict");
   const processingCoins = new Set(); // Set to track coins being processed
   let balance = null; // Variable to store the balance value
   let totalCost = null; // Variable to store the total cost of all chapters
@@ -35,7 +36,7 @@
   ); // Initialize the variable from settings
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
-  let concurrencyLimit = 1; // Limit the number of concurrent unlock requests
+  let concurrencyLimit = GM_getValue("concurrencyLimit", 1);
   let enableChapterLog = false; // Enable logging of chapter details
 
   // Cache for selectors
@@ -56,6 +57,35 @@
     };
   };
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
+
+  /**
+   * Function to update concurrency limit with validation and storage
+   */
+  function updateConcurrencyLimit() {
+    const fallbackConcurrencyLimit = concurrencyLimit;
+    const input = prompt("Enter new limit (1-5):", concurrencyLimit);
+
+    if (input !== null) {
+      const newConcurrencyLimit = parseInt(input, 10);
+      if (
+        Number.isInteger(newConcurrencyLimit) &&
+        newConcurrencyLimit >= 0 &&
+        newConcurrencyLimit <= 5
+      ) {
+        concurrencyLimit = newConcurrencyLimit;
+        GM_setValue("concurrencyLimit", concurrencyLimit); // Store the new value
+        console.log(`Concurrency limit updated to ${concurrencyLimit}`);
+        return true; // Indicate success
+      } else {
+        console.warn(
+          `Invalid concurrency limit entered: "${input}". Reverting to ${fallbackConcurrencyLimit}.`
+        );
+        concurrencyLimit = fallbackConcurrencyLimit; // Revert to the previous value
+        return false; // Indicate failure
+      }
+    }
+    return false; // Indicate cancellation
+  }
 
   /**
    * Function to get the appropriate chapter list selector based on the current URL with caching
@@ -1076,6 +1106,8 @@
       try {
         console.log("Creating UI for settings");
         settingsUI();
+        // Register menu command
+        GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
       } catch (error) {
         console.error("Error creating Settings UI block:", error);
       }
