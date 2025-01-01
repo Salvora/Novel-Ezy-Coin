@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.7.2
+// @version     1.7.4
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @grant        GM_registerMenuCommand
+// @grant       GM_registerMenuCommand
+// @grant       GM_unregisterMenuCommand
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/styles.css?v=1.7.0#sha256=bde2db910198b249808ca784af346d864713b5f9a7a46445d51c716598e500df
 // @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/ezy-coin-settings.html?v=1.1.0#sha256=2784e6334415a4b53711b4cf13175f66db1d75711b7176b6d68aba0d1e1cd964
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/siteConfig.json?v=1.1.0#sha256=fc1090f795b62fd6bd022c111d4d74b1de67bf50e1e91de612beb79ad131d8b3
@@ -37,7 +38,8 @@
   let balanceLock = false; // Lock to ensure atomic balance updates
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   let concurrencyLimit = GM_getValue("concurrencyLimit", 1);
-  let enableChapterLog = false; // Enable logging of chapter details
+  let enableChapterLog = GM_getValue("enableChapterLog", false);
+  let chapterLogMenuId; // Variable to store the menu command ID
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -57,6 +59,35 @@
     };
   };
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
+
+  /**
+   * Function to toggle and register the enableChapterLog setting
+   * This single function handles both toggling the setting and updating the menu.
+   *
+   * @param {boolean} toggle - If true, toggles the enableChapterLog setting.
+   *                            If false or undefined, only registers the menu.
+   */
+  function manageChapterLogMenu(toggle = false) {
+    if (toggle) {
+      // Toggle the enableChapterLog value
+      enableChapterLog = !enableChapterLog;
+      GM_setValue("enableChapterLog", enableChapterLog);
+      console.log(`enableChapterLog is now set to: ${enableChapterLog}`);
+    }
+
+    // Unregister the old menu command if it exists
+    if (chapterLogMenuId !== undefined) {
+      GM_unregisterMenuCommand(chapterLogMenuId);
+    }
+
+    // Define the new menu text based on the current state
+    const menuText = `Enable Chapter Log: ${enableChapterLog ? "On" : "Off"}`;
+
+    // Register the updated menu command and store its ID
+    chapterLogMenuId = GM_registerMenuCommand(menuText, () => {
+      manageChapterLogMenu(true); // Pass 'true' to toggle on click
+    });
+  }
 
   /**
    * Function to update concurrency limit with validation and storage
@@ -1110,6 +1141,7 @@
         settingsUI();
         // Register menu command
         GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
+        manageChapterLogMenu();
       } catch (error) {
         console.error("Error creating Settings UI block:", error);
       }
