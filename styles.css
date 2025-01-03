@@ -70,7 +70,7 @@
 }
 
 .coin.clicked {
-  transform: scale(0.90);
+  transform: scale(0.9);
 }
 
 .c-btn:hover {
@@ -118,14 +118,14 @@
   background-color: #333333 !important;
 }
 
-.flash-red, .flash-green {
+.flash-red,
+.flash-green {
   display: flex; /* Center children properly */
   justify-content: center;
   align-items: center;
   width: auto; /* Adjust width dynamically */
   height: auto; /* Prevent height changes */
 }
-
 
 .unlocked-green {
   background-color: green !important;
@@ -166,13 +166,21 @@
 }
 
 @keyframes flash-green-animation {
-  0% { background-color: green !important; }
-  100% { background-color: transparent !important; }
+  0% {
+    background-color: green !important;
+  }
+  100% {
+    background-color: transparent !important;
+  }
 }
 
 @keyframes flash-red-animation {
-  0% { background-color: red !important; }
-  100% { background-color: transparent !important; }
+  0% {
+    background-color: red !important;
+  }
+  100% {
+    background-color: transparent !important;
+  }
 }
 
 .flash-icon {

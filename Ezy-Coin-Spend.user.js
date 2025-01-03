@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.7.4
+// @version     1.7.5
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_registerMenuCommand
 // @grant       GM_unregisterMenuCommand
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/styles.css?v=1.7.0#sha256=bde2db910198b249808ca784af346d864713b5f9a7a46445d51c716598e500df
-// @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/ezy-coin-settings.html?v=1.1.0#sha256=2784e6334415a4b53711b4cf13175f66db1d75711b7176b6d68aba0d1e1cd964
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/styles.css?v=1.7.1#sha256=bde2db910198b249808ca784af346d864713b5f9a7a46445d51c716598e500df
+// @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/ezy-coin-settings.html?v=1.1.2#sha256=2784e6334415a4b53711b4cf13175f66db1d75711b7176b6d68aba0d1e1cd964
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/siteConfig.json?v=1.1.0#sha256=fc1090f795b62fd6bd022c111d4d74b1de67bf50e1e91de612beb79ad131d8b3
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png#sha256=493177e879b9f946174356a0ed957ff36682d83ff5a94040cd274d2cbeefd77b
@@ -39,7 +39,9 @@
   const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   let concurrencyLimit = GM_getValue("concurrencyLimit", 1);
   let enableChapterLog = GM_getValue("enableChapterLog", false);
+  let settingsUIVisibility = GM_getValue("settingsUIVisibility", true);
   let chapterLogMenuId; // Variable to store the menu command ID
+  let settingsVisibilityMenuId;
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -90,6 +92,43 @@
   }
 
   /**
+   * Function to toggle and register the settingsUIVisibility setting
+   * @param {boolean} toggle - If true, toggles the setting value
+   */
+  function manageSettingsVisibility(toggle = false) {
+    if (toggle) {
+      // Toggle the visibility
+      settingsUIVisibility = !settingsUIVisibility;
+      GM_setValue("settingsUIVisibility", settingsUIVisibility);
+
+      // Handle UI update
+      const existingUI = document.getElementById("ezy-coin-settings-ui");
+      if (settingsUIVisibility) {
+        if (!existingUI) {
+          settingsUI(); // Create UI if it doesn't exist
+        } else {
+          existingUI.style.display = "flex"; // Show existing UI
+        }
+      } else {
+        if (existingUI) {
+          existingUI.style.display = "none"; // Hide UI
+        }
+      }
+    }
+
+    // Unregister existing menu command if it exists
+    if (settingsVisibilityMenuId !== undefined) {
+      GM_unregisterMenuCommand(settingsVisibilityMenuId);
+    }
+
+    // Register new menu command with updated text
+    const menuText = `Settings UI: ${settingsUIVisibility ? "On" : "Off"}`;
+    settingsVisibilityMenuId = GM_registerMenuCommand(menuText, () => {
+      manageSettingsVisibility(true);
+    });
+  }
+
+  /**
    * Function to update concurrency limit with validation and storage
    */
   function updateConcurrencyLimit() {
@@ -132,36 +171,58 @@
 
   /**
    * Function to create the settings UI
+   * Prevents multiple instances by checking for an existing UI element.
    */
   function settingsUI() {
-    const template = GM_getResourceText(SETTINGS.resourceName);
+    // Check if the settings UI already exists
+    if (document.getElementById("ezy-coin-settings-ui")) {
+      console.log("Settings UI already exists. Skipping creation.");
+      return;
+    }
 
-    const container = document.createElement("div");
-    container.innerHTML = template;
-    document.body.appendChild(container.firstElementChild);
+    if (!settingsUIVisibility) {
+      console.log("Settings UI visibility is disabled. Skipping creation.");
+      return;
+    }
+    const menuTemplate = GM_getResourceText(SETTINGS.resourceName);
+
+    document.body.insertAdjacentHTML("beforeend", menuTemplate);
 
     const checkbox = document.getElementById(SETTINGS.checkboxId);
-    checkbox.checked = autoUnlockSetting;
+    if (checkbox) {
+      checkbox.checked = autoUnlockSetting;
 
-    checkbox.addEventListener("change", async (e) => {
-      autoUnlockSetting = e.target.checked; // Update the variable
-      GM_setValue(`autoUnlock_${window.location.hostname}`, autoUnlockSetting);
-      console.log(`Auto Unlock setting changed to: ${autoUnlockSetting}`);
+      // Add event listener only if it hasn't been added before
+      if (!checkbox.dataset.listenerAdded) {
+        checkbox.addEventListener("change", async (e) => {
+          autoUnlockSetting = e.target.checked; // Update the variable
+          GM_setValue(
+            `autoUnlock_${window.location.hostname}`,
+            autoUnlockSetting
+          );
+          console.log(`Auto Unlock setting changed to: ${autoUnlockSetting}`);
 
-      // Determine if the current page is a chapter page
-      const isChapterPage = chapterPageKeywordList.some((keyword) =>
-        window.location.pathname.includes(`/${keyword}`)
-      );
+          // Determine if the current page is a chapter page
+          const isChapterPage = chapterPageKeywordList.some((keyword) =>
+            window.location.pathname.includes(`/${keyword}`)
+          );
 
-      if (autoUnlockSetting && isChapterPage) {
-        console.log(
-          "Auto Unlock enabled on a chapter page. Initiating auto unlock..."
-        );
-        await autoUnlockChapters();
-      } else if (!autoUnlockSetting && isChapterPage) {
-        console.log("Auto Unlock disabled.");
+          if (autoUnlockSetting && isChapterPage) {
+            console.log(
+              "Auto Unlock enabled on a chapter page. Initiating auto unlock..."
+            );
+            await autoUnlockChapters();
+          } else if (!autoUnlockSetting && isChapterPage) {
+            console.log("Auto Unlock disabled.");
+          }
+        });
+
+        // Mark that the listener has been added to prevent duplicates
+        checkbox.dataset.listenerAdded = "true";
       }
-    });
+    } else {
+      console.error(`Checkbox with ID "${SETTINGS.checkboxId}" not found.`);
+    }
   }
 
   /**
@@ -1110,7 +1171,6 @@
       document.querySelector('div[class*="cf-browser-verification"]') !== null;
 
     const isCloudflare = textMatch || titleMatch || selectorMatch;
-    console.log(`isCloudflarePage: ${isCloudflare}`);
     return isCloudflare;
   }
 
@@ -1166,6 +1226,7 @@
       console.log("Creating UI for settings");
       settingsUI();
       GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
+      manageSettingsVisibility(); // Add this line
       manageChapterLogMenu();
     } catch (error) {
       console.error("Error creating Settings UI block:", error);
