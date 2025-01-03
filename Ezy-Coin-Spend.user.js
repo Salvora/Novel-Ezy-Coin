@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.7.5
+// @version     1.7.6
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
 // @grant       GM_getValue
 // @grant       GM_registerMenuCommand
 // @grant       GM_unregisterMenuCommand
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/styles.css?v=1.7.1#sha256=bde2db910198b249808ca784af346d864713b5f9a7a46445d51c716598e500df
-// @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/ezy-coin-settings.html?v=1.1.2#sha256=2784e6334415a4b53711b4cf13175f66db1d75711b7176b6d68aba0d1e1cd964
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/styles.css?v=1.7.1#sha256=6173ed57658951060840d9991b8e46aa9949a46b5eafd595c85d1e8216994396
+// @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/ezy-coin-settings.html?v=1.1.3#sha256=b907b17ee8de2d213e06ce056df9519f1be0e0a414b583bd649aba9c44512c2c
 // @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Config/siteConfig.json?v=1.1.0#sha256=fc1090f795b62fd6bd022c111d4d74b1de67bf50e1e91de612beb79ad131d8b3
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png#sha256=493177e879b9f946174356a0ed957ff36682d83ff5a94040cd274d2cbeefd77b
