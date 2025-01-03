@@ -1082,9 +1082,46 @@
   }
 
   /**
+   * Enhanced Function to Check if Cloudflare Human Verification Page is Present
+   * Utilizes multiple detection strategies for increased reliability.
+   *
+   * @returns {boolean} True if Cloudflare verification page detected, false otherwise
+   */
+  function isCloudflarePage() {
+    const verificationTexts = [
+      "Verify you are human",
+      "Checking your browser",
+      "Just a moment",
+      "Please complete the security check to access",
+    ];
+
+    // Check for verification texts
+    const textMatch = verificationTexts.some((text) =>
+      document.body.innerText.includes(text)
+    );
+
+    // Check if the title includes "Just a moment"
+    const titleMatch = document.title.includes("Just a moment");
+
+    // Check for specific verification elements using valid selectors
+    const selectorMatch =
+      document.querySelector('div[class*="challenge-form"]') !== null ||
+      document.querySelector('div[class*="cf-browser-verification"]') !== null;
+
+    const isCloudflare = textMatch || titleMatch || selectorMatch;
+    return isCloudflare;
+  }
+
+  /**
    * Main initialization function
    */
   function init() {
+    // Check for Cloudflare human verification
+    if (isCloudflarePage()) {
+      console.log("Cloudflare human verification detected. Script aborted.");
+      return;
+    }
+
     try {
       balance = getBalance(document);
       if (balance === null) {
