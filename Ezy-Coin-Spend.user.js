@@ -1088,6 +1088,7 @@
    * @returns {boolean} True if Cloudflare verification page detected, false otherwise
    */
   function isCloudflarePage() {
+    console.log("Checking for Cloudflare human verification page...");
     const verificationTexts = [
       "Verify you are human",
       "Checking your browser",
@@ -1109,14 +1110,73 @@
       document.querySelector('div[class*="cf-browser-verification"]') !== null;
 
     const isCloudflare = textMatch || titleMatch || selectorMatch;
+    console.log(`isCloudflarePage: ${isCloudflare}`);
     return isCloudflare;
+  }
+
+  /**
+   * Initialize Unlock Functionality on Non-Chapter Pages
+   */
+  function initializeUnlockAll() {
+    totalCost = 0;
+    createUnlockAllButton();
+    observer = new MutationObserver((mutations) => {
+      const shouldUpdate = mutations.some(
+        (mutation) => mutation.addedNodes.length || mutation.removedNodes.length
+      );
+      if (shouldUpdate) {
+        debouncedFindAndLinkifyCoins();
+      }
+    });
+
+    // Add cleanup listener
+    window.addEventListener("unload", () => {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+    });
+
+    const targetDiv = document.querySelector(
+      getSelector(window.location.origin).chapterList
+    );
+    if (targetDiv) {
+      debouncedFindAndLinkifyCoins();
+      observer.observe(targetDiv, { childList: true, subtree: true });
+    } else {
+      console.error("Target div not found");
+    }
+  }
+
+  /**
+   * Initialize Functionality on Chapter Pages
+   */
+  function initializeChapterPage() {
+    if (autoUnlockSetting) {
+      console.log("Auto unlock is enabled. Starting auto unlock...");
+      autoUnlockChapters();
+    }
+  }
+
+  /**
+   * Register Settings UI and Menu Commands
+   */
+  function setupUIAndMenus() {
+    try {
+      console.log("Creating UI for settings");
+      settingsUI();
+      GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
+      manageChapterLogMenu();
+    } catch (error) {
+      console.error("Error creating Settings UI block:", error);
+    }
   }
 
   /**
    * Main initialization function
    */
   function init() {
-    // Check for Cloudflare human verification
+    // Abort script if Cloudflare verification is detected
     if (isCloudflarePage()) {
       console.log("Cloudflare human verification detected. Script aborted.");
       return;
@@ -1130,58 +1190,25 @@
         );
         return;
       }
+
+      // Apply custom styles
       GM_addStyle(GM_getResourceText("customCSS"));
+
+      // Determine page type
       const isChapterPage = chapterPageKeywordList.some((keyword) =>
         window.location.pathname.includes(`/${keyword}`)
       );
-      if (!isChapterPage) {
-        totalCost = 0;
-        createUnlockAllButton();
-        observer = new MutationObserver((mutations) => {
-          for (const mutation of mutations) {
-            if (mutation.addedNodes.length || mutation.removedNodes.length) {
-              debouncedFindAndLinkifyCoins();
-              break;
-            }
-          }
-        });
 
-        // Add cleanup listener right after observer creation
-        window.addEventListener("unload", () => {
-          if (observer) {
-            observer.disconnect();
-            observer = null;
-          }
-        });
-        const targetDiv = document.querySelector(
-          getSelector(window.location.origin).chapterList
-        );
-        if (targetDiv) {
-          debouncedFindAndLinkifyCoins();
-          observer.observe(targetDiv, { childList: true, subtree: true });
-        } else {
-          console.error("Target div not found");
-        }
-      } else if (isChapterPage) {
-        if (autoUnlockSetting) {
-          console.log("Auto unlock is enabled. Starting auto unlock...");
-          autoUnlockChapters();
-        }
+      // Initialize based on page type
+      if (!isChapterPage) {
+        initializeUnlockAll();
       } else {
-        console.log("Coin unlocking is not running on a chapter page");
+        initializeChapterPage();
       }
     } catch (error) {
       console.error("Error during initialization:", error);
     } finally {
-      try {
-        console.log("Creating UI for settings");
-        settingsUI();
-        // Register menu command
-        GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
-        manageChapterLogMenu();
-      } catch (error) {
-        console.error("Error creating Settings UI block:", error);
-      }
+      setupUIAndMenus();
     }
   }
 
