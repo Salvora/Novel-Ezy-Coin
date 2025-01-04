@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.7.6
+// @version     1.7.7
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -920,7 +920,6 @@
       throw new Error("Concurrency limit must be greater than 0");
     }
     if (limit === 0) {
-      // If limit is 0, execute all tasks at once
       const promises = tasks.map((task) => task());
       return Promise.all(promises);
     }
@@ -929,14 +928,19 @@
     const executing = new Set();
 
     for (const task of tasks) {
-      const p = task();
-      results.push(p);
-      executing.add(p);
-
-      // When the number of executing tasks reaches the limit, wait for any to finish
+      // If we've reached the limit, wait for one task to complete
       if (executing.size >= limit) {
         await Promise.race(executing);
       }
+
+      // Add delay before starting next task (except for the first task in each batch)
+      if (executing.size > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+
+      const p = task();
+      results.push(p);
+      executing.add(p);
 
       // Once a task completes, remove it from the executing set
       p.finally(() => executing.delete(p));
