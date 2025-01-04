@@ -52,7 +52,6 @@
 
   const siteConfig = JSON.parse(GM_getResourceText("siteConfig"));
 
-  // Add debounce utility near top of script after variables
   const debounce = (fn, delay) => {
     let timeoutId;
     return (...args) => {
@@ -66,8 +65,10 @@
    * Function to toggle and register the enableChapterLog setting
    * This single function handles both toggling the setting and updating the menu.
    *
-   * @param {boolean} toggle - If true, toggles the enableChapterLog setting.
-   *                            If false or undefined, only registers the menu.
+   * @param {boolean} [toggle=false] - If true, toggles the enableChapterLog setting.
+   *                                    If false or undefined, only registers the menu.
+   * @returns {void}
+   * @throws {Error} - Throws an error if toggling fails.
    */
   function manageChapterLogMenu(toggle = false) {
     if (toggle) {
@@ -93,7 +94,10 @@
 
   /**
    * Function to toggle and register the settingsUIVisibility setting
-   * @param {boolean} toggle - If true, toggles the setting value
+   *
+   * @param {boolean} [toggle=false] - If true, toggles the setting value.
+   * @returns {void}
+   * @throws {Error} - Throws an error if toggling fails.
    */
   function manageSettingsVisibility(toggle = false) {
     if (toggle) {
@@ -129,7 +133,10 @@
   }
 
   /**
-   * Function to update concurrency limit with validation and storage
+   * Updates the concurrency limit with validation and storage.
+   *
+   * @returns {void} - This function does not return a value.
+   * @throws {Error} - Throws an error if the provided limit is invalid or if storage fails.
    */
   function updateConcurrencyLimit() {
     const fallbackConcurrencyLimit = concurrencyLimit;
@@ -159,8 +166,10 @@
 
   /**
    * Function to get the appropriate chapter list selector based on the current URL with caching
+   *
    * @param {string} url - The URL of the current site
    * @returns {object} The selector for the current site
+   * @throws {Error} - Throws an error if URL is not provided or invalid.
    */
   function getSelector(url) {
     if (!selectorCache.has(url)) {
@@ -170,8 +179,11 @@
   }
 
   /**
-   * Function to create the settings UI
+   * Creates the settings UI for the Ezy-Coin application.
    * Prevents multiple instances by checking for an existing UI element.
+   *
+   * @returns {void} - This function does not return a value.
+   * @throws {Error} - Throws an error if the UI cannot be created or appended to the DOM.
    */
   function settingsUI() {
     // Check if the settings UI already exists
@@ -227,8 +239,11 @@
 
   /**
    * Function to add or remove a coin from processingCoins
+   *
    * @param {HTMLElement} coin - The coin element
    * @param {string} action - `'add'` to add the coin, `'delete'` to remove it
+   * @returns {void}
+   * @throws {Error} - Throws an error if the action is invalid.
    */
   function setProcessingCoin(coin, action) {
     if (action === "add") {
@@ -252,8 +267,11 @@
 
   /**
    * Function to enable or disable the button both functionally and visually
+   *
    * @param {HTMLElement} button - The button element
    * @param {string} action - `'enable'` to enable, `'disable'` to disable
+   * @returns {void}
+   * @throws {Error} - Throws an error if the action is invalid.
    */
   function setButtonState(button, action) {
     if (action === "disable") {
@@ -273,9 +291,11 @@
 
   /**
    * Validates document structure
-   * @param {Document} doc Document to validate
-   * @param {string} url The URL of the current site
+   *
+   * @param {Document} doc - Document to validate
+   * @param {string} url - The URL of the current site
    * @returns {boolean} True if valid
+   * @throws {Error} - Throws an error if parameters are invalid.
    */
   function isValidDocument(doc, url) {
     return doc?.querySelector(getSelector(url).coinPlaceholder) !== null;
@@ -283,9 +303,11 @@
 
   /**
    * Parses HTML content and validates document
-   * @param {string} content HTML content
-   * @param {string} url The URL of the current site
+   *
+   * @param {string} content - HTML content
+   * @param {string} url - The URL of the current site
    * @returns {Document|null} Parsed document or null
+   * @throws {Error} - Throws an error if parsing fails.
    */
   function parseHTML(content, url) {
     try {
@@ -300,8 +322,10 @@
 
   /**
    * Gets the user's balance from document
-   * @param {Document} doc Document to search
-   * @returns {number} User's balance
+   *
+   * @param {Document} doc - Document to search
+   * @returns {number|null} User's balance or null if not found
+   * @throws {Error} - Throws an error if parameters are invalid.
    */
   function getBalance(doc) {
     if (!doc || !(doc instanceof Document)) {
@@ -338,7 +362,9 @@
 
   /**
    * Gets dynamic user balance from user-settings page
-   * @returns {Promise<number>} User's current balance
+   *
+   * @returns {Promise<number|null>} User's current balance or null if failed
+   * @throws {Error} - Throws an error if the request fails.
    */
   async function getDynamicBalance() {
     const TIMEOUT_MS = 10000;
@@ -394,7 +420,10 @@
 
   /**
    * Function to update the user's balance
+   *
    * @param {number} delta - The amount to subtract from the balance
+   * @returns {Promise<void>}
+   * @throws {Error} - Throws an error if delta is invalid or update fails.
    */
   async function updateBalance(delta) {
     while (balanceLock) {
@@ -431,8 +460,10 @@
 
   /**
    * Function to check if the user has enough balance
+   *
    * @param {number} cost - The cost to check against the balance
    * @returns {Promise<boolean>} True if the user has enough balance, false otherwise
+   * @throws {Error} - Throws an error if balance retrieval fails.
    */
   async function checkBalance(cost) {
     try {
@@ -467,6 +498,7 @@
    *
    * @param {HTMLElement} element - The element containing the coin cost.
    * @returns {number|null} The extracted coin cost or null if not found.
+   * @throws {Error} - Throws an error if the element is invalid.
    */
   function getCoinCost(element) {
     if (!element || !(element instanceof HTMLElement)) {
@@ -512,7 +544,10 @@
   }
 
   /**
-   * Function to handle newly added elements and linkify coins
+   * Handles newly added elements by linkifying coins in the Ezy-Coin application.
+   *
+   * @returns {void}
+   * @throws {Error} - Throws an error if linkifying fails.
    */
   function findAndLinkifyCoins() {
     try {
@@ -551,8 +586,11 @@
 
   /**
    * Function to show or hide a spinner on an element
+   *
    * @param {HTMLElement} element - The element to show or hide the spinner on
    * @param {boolean} show - Whether to show or hide the spinner
+   * @returns {void}
+   * @throws {Error} - Throws an error if parameters are invalid.
    */
   function elementSpinner(element, show) {
     let spinner = element.querySelector(".spinner");
@@ -582,7 +620,10 @@
 
   /**
    * Function to handle the click event on a coin
+   *
    * @param {Event} event - The click event
+   * @returns {Promise<void>}
+   * @throws {Error} - Throws an error if handling fails.
    */
   async function handleCoinClick(event) {
     event.preventDefault();
@@ -644,9 +685,11 @@
 
   /**
    * Function to flash the coin with an icon
+   *
    * @param {HTMLElement} coin - The coin element to flash
    * @param {boolean} isSuccess - Whether to flash green for success or red for failure
-   * @returns {Promise} - Resolves after the flash effect is complete
+   * @returns {Promise<void>} - Resolves after the flash effect is complete
+   * @throws {Error} - Throws an error if flashing fails.
    */
   async function flashCoin(coin, isSuccess) {
     const originalContent = coin.innerHTML;
@@ -668,6 +711,16 @@
     }, 1000);
   }
 
+  /**
+   * Retrieves the chapter ID and corresponding chapter element based on the provided coin and page type.
+   *
+   * @param {HTMLElement} coin - The DOM element representing the coin.
+   * @param {string} page - The type of page, either 'series-page' or 'chapter-page'.
+   * @returns {{ chapterId: string|null, chapterElement: HTMLElement|null }}
+   *          An object containing the chapterId and chapterElement, or null values if not found.
+   * @throws {Error}
+   *          If an invalid page type is provided or if the chapter element/class is not found.
+   */
   function getChapterId(coin, page) {
     const indicator = getSelector(window.location.origin).chapterIdIndicator;
     let chapterElement;
@@ -703,6 +756,13 @@
     return { chapterId, chapterElement };
   }
 
+  /**
+   * Retrieves the nonce element from the DOM based on the current window location.
+   *
+   * @returns {HTMLElement|null}
+   *          The nonce element if found, otherwise null.
+   * @throws {Error} - Throws an error if the selector is invalid.
+   */
   function getNonceElement() {
     return document.querySelector(
       getSelector(window.location.origin).noncePlaceholder
@@ -711,8 +771,11 @@
 
   /**
    * Function to unlock a chapter
+   *
    * @param {HTMLElement} coin - The coin element
+   * @param {string} origin - The origin of the unlock request ('series-page' or 'chapter-page')
    * @returns {Promise<boolean>} True if the chapter was unlocked successfully, false otherwise
+   * @throws {Error} - Throws an error if unlocking fails due to network issues or invalid data.
    */
   async function unlockChapter(coin, origin) {
     if (!coin || !(coin instanceof Element)) {
@@ -822,10 +885,12 @@
 
   /**
    * Send HTTP request with timeout
+   *
    * @param {string} url - The URL to send the request to
-   * @param {Object} options - Request options
+   * @param {Object} [options={}] - Request options
    * @param {number} [timeout=10000] - Timeout in milliseconds
    * @returns {Promise<Response>} Fetch response
+   * @throws {Error} - Throws an error if the request fails or times out.
    */
   async function sendRequest(url, options = {}, timeout = 10000) {
     const { signal, ...fetchOptions } = options;
@@ -839,7 +904,13 @@
   }
 
   /**
-   * Function to create the "Unlock All" button
+   * Creates and appends the "Unlock All" button to the user interface.
+   *
+   * This function initializes the button's properties, sets up event listeners,
+   * and ensures that clicking the button will unlock all chapters in the Ezy-Coin application.
+   *
+   * @returns {HTMLButtonElement} - The created "Unlock All" button element.
+   * @throws {Error} - Throws an error if the button cannot be created or appended to the DOM.
    */
   function createUnlockAllButton() {
     try {
@@ -878,7 +949,7 @@
         targetElement.appendChild(button);
         console.log("Button inserted successfully");
 
-        // Expose updateButtonContent for external calls
+        // Expose updateButtonContent function for external calls
         button.updateContent = updateButtonContent;
 
         button.addEventListener("click", async () => {
@@ -913,7 +984,7 @@
    * @param {number} limit - The maximum number of concurrent tasks.
    * @param {Array<Function>} tasks - An array of functions that return Promises.
    * @returns {Promise<Array>} - Resolves when all tasks have completed.
-   * @throws {Error} - If the concurrency limit is less than or equal to zero.
+   * @throws {Error} - If the concurrency limit is less than zero.
    */
   async function withConcurrencyLimit(limit, tasks) {
     if (limit < 0) {
@@ -950,7 +1021,10 @@
   }
 
   /**
-   * Function to unlock all chapters
+   * Unlocks all chapters in the Ezy-Coin application.
+   *
+   * @returns {Promise<void>} - Resolves when all chapters have been successfully unlocked.
+   * @throws {Error} - Throws an error if unlocking fails due to network issues or invalid chapter data.
    */
   async function unlockAllChapters() {
     try {
@@ -1024,7 +1098,10 @@
   }
 
   /**
-   * Function to auto unlock chapters
+   * Automatically unlocks chapters in the Ezy-Coin application.
+   *
+   * @returns {Promise<void>} - Resolves when the chapters have been successfully unlocked.
+   * @throws {Error} - Throws an error if unlocking fails due to network issues.
    */
   async function autoUnlockChapters() {
     const headNextButton = document
@@ -1078,6 +1155,7 @@
    * Retrieves the title of the current series from the page.
    *
    * @returns {string} The title of the series, or 'Unknown Series' if not found.
+   * @throws {Error} - Throws an error if selection fails.
    */
   function getSeriesTitle() {
     const seriesTitleElement = document.querySelector(".post-title h1");
@@ -1091,6 +1169,7 @@
    *
    * @param {NodeListOf<HTMLElement>} coinElements - A collection of coin elements representing chapters.
    * @returns {void}
+   * @throws {Error} - Throws an error if logging fails.
    */
   function logDetails(coinElements) {
     const seriesMap = new Map();
@@ -1151,6 +1230,7 @@
    * Utilizes multiple detection strategies for increased reliability.
    *
    * @returns {boolean} True if Cloudflare verification page detected, false otherwise
+   * @throws {Error} - Throws an error if detection fails unexpectedly.
    */
   function isCloudflarePage() {
     console.log("Checking for Cloudflare human verification page...");
@@ -1179,7 +1259,10 @@
   }
 
   /**
-   * Initialize Unlock Functionality on Non-Chapter Pages
+   * Initializes unlock functionality on non-chapter pages in the Ezy-Coin application.
+   *
+   * @returns {void} - This function does not return a value.
+   * @throws {Error} - Throws an error if initialization fails due to missing elements or unexpected page structure.
    */
   function initializeUnlockAll() {
     totalCost = 0;
@@ -1213,7 +1296,10 @@
   }
 
   /**
-   * Initialize Functionality on Chapter Pages
+   * Initializes unlock functionality on chapter pages in the Ezy-Coin application.
+   *
+   * @returns {void} - This function does not return a value.
+   * @throws {Error} - Throws an error if initialization fails due to missing elements or unexpected page structure.
    */
   function initializeChapterPage() {
     if (autoUnlockSetting) {
@@ -1223,14 +1309,17 @@
   }
 
   /**
-   * Register Settings UI and Menu Commands
+   * Registers the Settings UI and Menu Commands in the Ezy-Coin application.
+   *
+   * @returns {void} - This function does not return a value.
+   * @throws {Error} - Throws an error if registration fails due to missing elements or conflicts.
    */
   function setupUIAndMenus() {
     try {
       console.log("Creating UI for settings");
       settingsUI();
       GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
-      manageSettingsVisibility(); // Add this line
+      manageSettingsVisibility();
       manageChapterLogMenu();
     } catch (error) {
       console.error("Error creating Settings UI block:", error);
@@ -1238,7 +1327,10 @@
   }
 
   /**
-   * Main initialization function
+   * Main initialization function.
+   *
+   * @returns {void} - This function does not return a value.
+   * @throws {Error} - Throws an error if initialization fails due to configuration issues or missing dependencies.
    */
   function init() {
     // Abort script if Cloudflare verification is detected
