@@ -41,7 +41,6 @@
   let settingsUIVisibility = GM_getValue("settingsUIVisibility", true);
   let chapterLogMenuId; // Variable to store the menu command ID
   let settingsVisibilityMenuId;
-  let eventListenersAdded = false; // Flag to prevent duplicate event listeners
 
   // Cache for selectors
   const selectorCache = new Map();
