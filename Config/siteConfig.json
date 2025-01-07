@@ -1,6 +1,6 @@
 {
   "https://darkstartranslations.com": {
-    "chapterList": "#manga-chapters-holder",
+    "chapterList": "#manga-chapters-holders",
     "buttonLocation": "#init-links",
     "balancePlaceholder": ".c-user_menu li:first-child a",
     "balanceString": "Balance:",
