@@ -58,9 +58,6 @@ This script is designed to prevent spending more than required. Please, report a
 
 ## TO DO
 
-- track handlecoinclick event listeners and prevent atatching multiple event listeners
-- check observer behaviour and disconnect early if not needed
-
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request on [GitHub](https://github.com/Salvora/Novel-Ezy-Coin).
