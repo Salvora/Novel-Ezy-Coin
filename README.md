@@ -58,11 +58,7 @@ This script is designed to prevent spending more than required. Please, report a
 
 ## TO DO
 
-- Reorganize the "site config"
-- move chapterPageKeywordList to "site config"
-- move autounlock variables "site config"
 - track handlecoinclick event listeners and prevent atatching multiple event listeners
-- check if the spinner element is being hidden after completion or being removed. Remove it after completion if not already done so.
 - check observer behaviour and disconnect early if not needed
 
 ## Contributing

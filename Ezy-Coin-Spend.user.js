@@ -10,7 +10,7 @@
 // @grant       GM_unregisterMenuCommand
 // @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/styles.css?v=1.7.1#sha256=6173ed57658951060840d9991b8e46aa9949a46b5eafd595c85d1e8216994396
 // @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/ezy-coin-settings.html?v=1.1.3#sha256=b907b17ee8de2d213e06ce056df9519f1be0e0a414b583bd649aba9c44512c2c
-// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Config/siteConfig.json?v=1.1.0#sha256=fc1090f795b62fd6bd022c111d4d74b1de67bf50e1e91de612beb79ad131d8b3
+// @resource    siteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Config/siteConfig.json?v=1.1.1#sha256=fc1090f795b62fd6bd022c111d4d74b1de67bf50e1e91de612beb79ad131d8b3
 // @author      Salvora
 // @icon        https://raw.githubusercontent.com/Salvora/Novel-Ezy-Coin/refs/heads/main/Images/coins-solid.png#sha256=493177e879b9f946174356a0ed957ff36682d83ff5a94040cd274d2cbeefd77b
 // @homepageURL https://github.com/Salvora/Novel-Ezy-Coin
@@ -36,12 +36,12 @@
     false
   ); // Initialize the variable from settings
   let balanceLock = false; // Lock to ensure atomic balance updates
-  const chapterPageKeywordList = ["chapter", "volume"]; // List of keywords to identify chapter pages
   let concurrencyLimit = GM_getValue("concurrencyLimit", 1);
   let enableChapterLog = GM_getValue("enableChapterLog", false);
   let settingsUIVisibility = GM_getValue("settingsUIVisibility", true);
   let chapterLogMenuId; // Variable to store the menu command ID
   let settingsVisibilityMenuId;
+  let eventListenersAdded = false; // Flag to prevent duplicate event listeners
 
   // Cache for selectors
   const selectorCache = new Map();
@@ -215,7 +215,9 @@
           console.log(`Auto Unlock setting changed to: ${autoUnlockSetting}`);
 
           // Determine if the current page is a chapter page
-          const isChapterPage = chapterPageKeywordList.some((keyword) =>
+          const isChapterPage = getSelector(
+            window.location.origin
+          ).chapterPageKeywordList.some((keyword) =>
             window.location.pathname.includes(`/${keyword}`)
           );
 
@@ -725,7 +727,9 @@
     const indicator = getSelector(window.location.origin).chapterIdIndicator;
     let chapterElement;
     if (page === "series-page") {
-      chapterElement = coin.closest(".wp-manga-chapter");
+      chapterElement = coin.closest(
+        getSelector(window.location.origin).chapterClassFromSeriesPage
+      );
     } else if (page === "chapter-page") {
       chapterElement = coin;
     } else {
@@ -834,7 +838,7 @@
 
         // Remove the premium-block class from the chapter element
         chapterElement.classList.remove(
-          getSelector(window.location.origin).premiumIndicator
+          getSelector(window.location.origin).premiumIndicatorClass
         );
 
         // Remove the c-btn-custom-1 class from the coin element
@@ -1104,12 +1108,18 @@
    * @throws {Error} - Throws an error if unlocking fails due to network issues.
    */
   async function autoUnlockChapters() {
+    const {
+      chapterNextButtonClass,
+      chapterNextButtonHeadId,
+      chapterNextButtonFootId,
+    } = getSelector(window.location.origin);
+
     const headNextButton = document
-      .getElementById("manga-reading-nav-head")
-      ?.querySelector(".nav-next");
+      .getElementById(chapterNextButtonHeadId)
+      ?.querySelector(chapterNextButtonClass);
     const footNextButton = document
-      .getElementById("manga-reading-nav-foot")
-      ?.querySelector(".nav-next");
+      .getElementById(chapterNextButtonFootId)
+      ?.querySelector(chapterNextButtonClass);
 
     let nextButton = headNextButton || footNextButton;
 
@@ -1125,7 +1135,9 @@
         return false;
       }
 
-      const isUnlocked = !nextButton.classList.contains("premium-block");
+      const isUnlocked = !nextButton.classList.contains(
+        getSelector(window.location.origin).premiumIndicatorClass
+      );
       const addClass = isUnlocked ? "unlocked-green" : "locked-red";
       const removeClass = isUnlocked ? "locked-red" : "unlocked-green";
 
@@ -1158,7 +1170,9 @@
    * @throws {Error} - Throws an error if selection fails.
    */
   function getSeriesTitle() {
-    const seriesTitleElement = document.querySelector(".post-title h1");
+    const seriesTitleElement = document.querySelector(
+      getSelector(window.location.origin).seriesTitleFromSeriesPage
+    );
     return seriesTitleElement
       ? seriesTitleElement.textContent.trim()
       : "Unknown Series";
@@ -1180,7 +1194,9 @@
       const action = getSelector(window.location.origin).unlockAction;
 
       // Find the ancestor element that contains the chapter title
-      const ancestorElement = coin.closest(".wp-manga-chapter");
+      const ancestorElement = coin.closest(
+        getSelector(window.location.origin).chapterClassFromSeriesPage
+      );
       const chapterTitle =
         ancestorElement?.querySelector("a")?.textContent.trim() ||
         "Unknown Title";
@@ -1352,7 +1368,9 @@
       GM_addStyle(GM_getResourceText("customCSS"));
 
       // Determine page type
-      const isChapterPage = chapterPageKeywordList.some((keyword) =>
+      const isChapterPage = getSelector(
+        window.location.origin
+      ).chapterPageKeywordList.some((keyword) =>
         window.location.pathname.includes(`/${keyword}`)
       );
 
