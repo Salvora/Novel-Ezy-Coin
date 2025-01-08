@@ -18,7 +18,8 @@
     "chapterNextButtonFootId": "manga-reading-nav-foot",
     "chapterNextButtonClass": ".nav-next",
     "seriesTitleFromSeriesPage": ".post-title h1",
-    "chapterClassFromSeriesPage": ".wp-manga-chapter"
+    "chapterClassFromSeriesPage": ".wp-manga-chapter",
+    "chapterHolderBlockClass": ".page-content-listing"
   },
   "https://luminarynovels.com": {
     "chapterList": "#manga-chapters-holder",
@@ -39,7 +40,8 @@
     "chapterNextButtonFootId": "manga-reading-nav-foot",
     "chapterNextButtonClass": ".nav-next",
     "seriesTitleFromSeriesPage": ".post-title h1",
-    "chapterClassFromSeriesPage": ".wp-manga-chapter"
+    "chapterClassFromSeriesPage": ".wp-manga-chapter",
+    "chapterHolderBlockClass": ".page-content-listing"
   },
   "https://hiraethtranslation.com": {
     "chapterList": ".page-content-listing.single-page",
@@ -60,6 +62,7 @@
     "chapterNextButtonFootId": "manga-reading-nav-foot",
     "chapterNextButtonClass": ".nav-next",
     "seriesTitleFromSeriesPage": ".post-title h1",
-    "chapterClassFromSeriesPage": ".wp-manga-chapter"
+    "chapterClassFromSeriesPage": ".wp-manga-chapter",
+    "chapterHolderBlockClass": ".page-content-listing"
   }
 }
