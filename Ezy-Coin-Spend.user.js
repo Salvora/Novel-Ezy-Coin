@@ -686,23 +686,23 @@
   }
 
   /**
-   * Function to handle the click event on a coin
+   * Handles newly added elements by linkifying coins in the Ezy-Coin application using event delegation.
    *
-   * @param {Event} event - The click event
-   * @returns {Promise<void>}
-   * @throws {Error} - Throws an error if handling fails.
+   * @returns {void}
    */
   async function handleCoinClick(event) {
     event.preventDefault();
-    const coin = event.currentTarget;
+    const coin = event.target.closest(currentSelectors.premiumChapterIndicator);
+    if (!coin) return;
 
     if (processingStateMap.get(coin)) {
-      console.log("Coin is already being processed, ignoring click");
+      console.log("Coin is already being processed, ignoring...");
       return;
     }
 
     setProcessingCoin(coin, ACTION_ADD); // Add coin to the set
     setButtonState(coin, ACTION_DISABLE); // Disable the button
+
     coin.classList.add("clicked");
     console.log("Coin clicked");
     elementSpinner(coin, true);
@@ -1025,8 +1025,6 @@
         button.updateContent = updateButtonContent;
 
         button.addEventListener("click", async () => {
-          const originalWidth = button.offsetWidth; // Save original button width
-          button.style.width = `${originalWidth}px`; // Set button width to its original width
           buttonText.style.display = "none"; // Hide button text
           elementSpinner(button, true); // Show spinner
           setButtonState(button, ACTION_DISABLE); // Disable the button
@@ -1039,14 +1037,16 @@
             elementSpinner(button, false); // Hide spinner
             updateButtonContent(); // Restore original button content dynamically then enable or disable button depending on total cost
             buttonText.style.display = "inline"; // Show button text
-            button.style.width = "auto"; // Reset button width to auto
           }
         });
+        return button;
       } else {
         console.error("Target element for button not found");
+        return null;
       }
     } catch (error) {
       console.error("Error creating unlock all button:", error);
+      return null;
     }
   }
 
