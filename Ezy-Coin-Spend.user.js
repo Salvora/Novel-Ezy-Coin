@@ -66,6 +66,7 @@
     };
   };
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
+  const debouncedHandleCoinClick = debounce(handleCoinClick, 300);
 
   /**
    * Function to toggle and register the enableChapterLog setting
@@ -565,43 +566,76 @@
   }
 
   /**
-   * Handles newly added elements by linkifying coins in the Ezy-Coin application.
+   * Handles newly added elements by linkifying coins in the Ezy-Coin application using event delegation.
    *
    * @returns {void}
-   * @throws {Error} - Throws an error if linkifying fails.
    */
   function findAndLinkifyCoins() {
     try {
-      const coinElements = document.querySelectorAll(
-        getSelector(window.location.origin).premiumChapterIndicator
-      );
+      // Retrieve selectors based on the current origin
+      const currentSelectors = getSelector(window.location.origin);
+      const containerSelector = currentSelectors.chapterHolderBlockClass; // The common parent for chapters
+      const coinSelector = currentSelectors.premiumChapterIndicator;
+
+      const container = document.querySelector(containerSelector);
+
+      if (!container) {
+        console.error(
+          `Chapter container with selector "${containerSelector}" not found.`
+        );
+        return;
+      }
+
+      // Add event delegation listener if not already added
+      if (!container.dataset.eventDelegationAdded) {
+        container.addEventListener("click", function (event) {
+          // Identify the closest coin element from the clicked target
+          const coin = event.target.closest(coinSelector);
+
+          // If a coin element is clicked within the container
+          if (coin && container.contains(coin)) {
+            debouncedHandleCoinClick(event);
+          }
+        });
+        container.dataset.eventDelegationAdded = "true";
+        console.log("Event delegation listener added to container.");
+      }
+
+      // Select all coin elements within the container
+      const coinElements = container.querySelectorAll(coinSelector);
       console.log(`Found ${coinElements.length} coin elements`);
 
+      // Add the custom class to each coin (only once)
       coinElements.forEach((coin) => {
-        if (!coin.dataset.listenerAdded) {
-          coin.addEventListener("click", handleCoinClick);
+        if (!coin.classList.contains("c-btn-custom-1")) {
           coin.classList.add("c-btn-custom-1");
-          coin.dataset.listenerAdded = true;
         }
       });
 
+      // Calculate the total cost from all coin elements
       totalCost = Array.from(coinElements).reduce(
         (total, coin) =>
           total + (parseInt(coin.textContent.replace(/,/g, ""), 10) || 0),
         0
       );
 
+      // Update the "Unlock All" button if it exists
       const unlockAllButton = document.getElementById("unlock-all-button");
-      if (unlockAllButton && unlockAllButton.updateContent) {
+      if (
+        unlockAllButton &&
+        typeof unlockAllButton.updateContent === "function"
+      ) {
         unlockAllButton.updateContent();
       }
 
       console.log(`Total cost calculated: ${totalCost}`);
+
+      // Log details if the feature is enabled
       if (enableChapterLog) {
         logDetails(coinElements);
       }
     } catch (error) {
-      console.error("Error finding and linking coins:", error);
+      console.error("Error finding and linkifying coins:", error);
     }
   }
 
