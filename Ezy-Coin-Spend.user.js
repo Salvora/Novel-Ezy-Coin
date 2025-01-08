@@ -29,6 +29,7 @@
   ("use strict");
   const processingStateMap = new WeakMap(); // Set to track coins being processed
   const buttonStateMap = new WeakMap(); // Track button states
+  const eventListenerMap = new WeakMap(); // Track event listeners
   let balance = null; // Variable to store the balance value
   let totalCost = null; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
@@ -199,10 +200,8 @@
 
   /**
    * Creates the settings UI for the Ezy-Coin application.
-   * Prevents multiple instances by checking for an existing UI element.
    *
-   * @returns {void} - This function does not return a value.
-   * @throws {Error} - Throws an error if the UI cannot be created or appended to the DOM.
+   * @returns {void}
    */
   function settingsUI() {
     // Check if the settings UI already exists
@@ -215,25 +214,24 @@
       console.log("Settings UI visibility is disabled. Skipping creation.");
       return;
     }
-    const menuTemplate = GM_getResourceText(SETTINGS.resourceName);
 
+    const menuTemplate = GM_getResourceText(SETTINGS.resourceName);
     document.body.insertAdjacentHTML("beforeend", menuTemplate);
 
     const checkbox = document.getElementById(SETTINGS.checkboxId);
     if (checkbox) {
       checkbox.checked = autoUnlockSetting;
 
-      // Add event listener only if it hasn't been added before
-      if (!checkbox.dataset.listenerAdded) {
-        checkbox.addEventListener("change", async (e) => {
-          autoUnlockSetting = e.target.checked; // Update the variable
+      // Add event listener using WeakMap to prevent duplicates
+      if (!eventListenerMap.has(checkbox)) {
+        const listener = async (e) => {
+          autoUnlockSetting = e.target.checked;
           GM_setValue(
             `autoUnlock_${window.location.hostname}`,
             autoUnlockSetting
           );
           console.log(`Auto Unlock setting changed to: ${autoUnlockSetting}`);
 
-          // Determine if the current page is a chapter page
           const isChapterPage = getSelector(
             window.location.origin
           ).chapterPageKeywordList.some((keyword) =>
@@ -248,10 +246,10 @@
           } else if (!autoUnlockSetting && isChapterPage) {
             console.log("Auto Unlock disabled.");
           }
-        });
+        };
 
-        // Mark that the listener has been added to prevent duplicates
-        checkbox.dataset.listenerAdded = "true";
+        checkbox.addEventListener("change", listener);
+        eventListenerMap.set(checkbox, listener);
       }
     } else {
       console.error(`Checkbox with ID "${SETTINGS.checkboxId}" not found.`);
