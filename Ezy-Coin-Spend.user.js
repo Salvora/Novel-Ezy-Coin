@@ -58,15 +58,27 @@
 
   const siteConfig = JSON.parse(GM_getResourceText("SiteConfig"));
 
-  const debounce = (fn, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => fn.apply(null, args), delay);
+  /**
+   * Debounce function to limit the rate at which a function can fire.
+   *
+   * @param {Function} func - The function to debounce.
+   * @param {number} wait - The number of milliseconds to delay.
+   * @returns {Function} - The debounced function.
+   */
+  function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
     };
-  };
+  }
+
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
-  const debouncedHandleCoinClick = debounce(handleCoinClick, 300);
+  const debouncedHandleCoinClick = debounce(handleCoinClick, 200);
 
   /**
    * Function to toggle and register the enableChapterLog setting
