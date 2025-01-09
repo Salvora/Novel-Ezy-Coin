@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.8.5
+// @version     1.8.6
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -297,7 +297,7 @@
       return false;
     }
     if (!buttonStateMap.has(button)) {
-      buttonStateMap.set(button, { disabled: false, originalWidth: null });
+      buttonStateMap.set(button, { disabled: false });
     }
     const state = buttonStateMap.get(button);
 
@@ -1024,6 +1024,8 @@
         button.updateContent = updateButtonContent;
 
         button.addEventListener("click", async () => {
+          const originalWidth = button.offsetWidth; // Save original button width
+          button.style.width = `${originalWidth}px`; // Set button width to its original width
           buttonText.style.display = "none"; // Hide button text
           elementSpinner(button, true); // Show spinner
           setButtonState(button, ACTION_DISABLE); // Disable the button
@@ -1036,6 +1038,7 @@
             elementSpinner(button, false); // Hide spinner
             updateButtonContent(); // Restore original button content dynamically then enable or disable button depending on total cost
             buttonText.style.display = "inline"; // Show button text
+            button.style.width = "auto"; // Reset button width to auto
           }
         });
         return button;
