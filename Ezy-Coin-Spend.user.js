@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.8.2
+// @version     1.8.5
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -27,7 +27,9 @@
 
 (function () {
   ("use strict");
-  const processingCoins = new Set(); // Set to track coins being processed
+  const processingStateMap = new WeakMap(); // Set to track coins being processed
+  const buttonStateMap = new WeakMap(); // Track button states
+  const eventListenerMap = new WeakMap(); // Track event listeners
   let balance = null; // Variable to store the balance value
   let totalCost = null; // Variable to store the total cost of all chapters
   let observer; // Define the observer globally
@@ -42,6 +44,12 @@
   let chapterLogMenuId; // Variable to store the menu command ID
   let settingsVisibilityMenuId;
 
+  // Parameters
+  const ACTION_DISABLE = "disable";
+  const ACTION_ENABLE = "enable";
+  const ACTION_ADD = "add";
+  const ACTION_DELETE = "delete";
+
   // Cache for selectors
   const selectorCache = new Map();
   const SETTINGS = {
@@ -51,14 +59,27 @@
 
   const siteConfig = JSON.parse(GM_getResourceText("SiteConfig"));
 
-  const debounce = (fn, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => fn.apply(null, args), delay);
+  /**
+   * Debounce function to limit the rate at which a function can fire.
+   *
+   * @param {Function} func - The function to debounce.
+   * @param {number} wait - The number of milliseconds to delay.
+   * @returns {Function} - The debounced function.
+   */
+  function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
     };
-  };
+  }
+
   const debouncedFindAndLinkifyCoins = debounce(findAndLinkifyCoins, 250);
+  const debouncedHandleCoinClick = debounce(handleCoinClick, 200);
 
   /**
    * Function to toggle and register the enableChapterLog setting
@@ -179,10 +200,8 @@
 
   /**
    * Creates the settings UI for the Ezy-Coin application.
-   * Prevents multiple instances by checking for an existing UI element.
    *
-   * @returns {void} - This function does not return a value.
-   * @throws {Error} - Throws an error if the UI cannot be created or appended to the DOM.
+   * @returns {void}
    */
   function settingsUI() {
     // Check if the settings UI already exists
@@ -195,25 +214,24 @@
       console.log("Settings UI visibility is disabled. Skipping creation.");
       return;
     }
-    const menuTemplate = GM_getResourceText(SETTINGS.resourceName);
 
+    const menuTemplate = GM_getResourceText(SETTINGS.resourceName);
     document.body.insertAdjacentHTML("beforeend", menuTemplate);
 
     const checkbox = document.getElementById(SETTINGS.checkboxId);
     if (checkbox) {
       checkbox.checked = autoUnlockSetting;
 
-      // Add event listener only if it hasn't been added before
-      if (!checkbox.dataset.listenerAdded) {
-        checkbox.addEventListener("change", async (e) => {
-          autoUnlockSetting = e.target.checked; // Update the variable
+      // Add event listener using WeakMap to prevent duplicates
+      if (!eventListenerMap.has(checkbox)) {
+        const listener = async (e) => {
+          autoUnlockSetting = e.target.checked;
           GM_setValue(
             `autoUnlock_${window.location.hostname}`,
             autoUnlockSetting
           );
           console.log(`Auto Unlock setting changed to: ${autoUnlockSetting}`);
 
-          // Determine if the current page is a chapter page
           const isChapterPage = getSelector(
             window.location.origin
           ).chapterPageKeywordList.some((keyword) =>
@@ -228,10 +246,10 @@
           } else if (!autoUnlockSetting && isChapterPage) {
             console.log("Auto Unlock disabled.");
           }
-        });
+        };
 
-        // Mark that the listener has been added to prevent duplicates
-        checkbox.dataset.listenerAdded = "true";
+        checkbox.addEventListener("change", listener);
+        eventListenerMap.set(checkbox, listener);
       }
     } else {
       console.error(`Checkbox with ID "${SETTINGS.checkboxId}" not found.`);
@@ -239,54 +257,67 @@
   }
 
   /**
-   * Function to add or remove a coin from processingCoins
+   * Adds or removes a coin from the processingStateMap.
    *
-   * @param {HTMLElement} coin - The coin element
-   * @param {string} action - `'add'` to add the coin, `'delete'` to remove it
-   * @returns {void}
-   * @throws {Error} - Throws an error if the action is invalid.
+   * @param {HTMLElement} coin - The coin element to be added or removed.
+   * @param {string} action - The action to perform: `'add'` to add the coin, `'delete'` to remove it.
+   * @returns {boolean} - Returns `true` if the action was successful, `false` otherwise.
    */
   function setProcessingCoin(coin, action) {
-    if (action === "add") {
-      if (!processingCoins.has(coin)) {
-        processingCoins.add(coin);
-        console.log("Coin added to processingCoins");
-      } else {
-        console.warn("Coin is already in processingCoins");
-      }
-    } else if (action === "delete") {
-      if (processingCoins.has(coin)) {
-        processingCoins.delete(coin);
-        console.log("Coin removed from processingCoins");
-      } else {
-        console.warn("Coin was not found in processingCoins");
-      }
+    if (!(coin instanceof HTMLElement)) {
+      console.error("Invalid coin element provided.");
+      return false;
+    }
+    if (action === ACTION_ADD) {
+      processingStateMap.set(coin, true);
+      console.log("Coin added to processingStateMap");
+      return true;
+    } else if (action === ACTION_DELETE) {
+      const wasDeleted = processingStateMap.delete(coin);
+      console.log(`Coin removed from processingStateMap: ${wasDeleted}`);
+      return wasDeleted;
     } else {
-      console.error("Invalid action. Use 'add' or 'delete'.");
+      console.error(
+        `Invalid action "${action}". Use '${ACTION_ADD}' or '${ACTION_DELETE}'.`
+      );
+      return false;
     }
   }
 
   /**
-   * Function to enable or disable the button both functionally and visually
+   * Enables or disables a button both functionally and visually.
    *
-   * @param {HTMLElement} button - The button element
-   * @param {string} action - `'enable'` to enable, `'disable'` to disable
-   * @returns {void}
-   * @throws {Error} - Throws an error if the action is invalid.
+   * @param {HTMLElement} button - The button element to be enabled or disabled.
+   * @param {string} action - The action to perform: `'enable'` to enable the button, `'disable'` to disable it.
+   * @returns {boolean} - Returns `true` if the action was successful, `false` otherwise.
    */
   function setButtonState(button, action) {
-    if (action === "disable") {
-      button.disabled = true; // Disable the button functionality
-      button.classList.add("disabled"); // Apply the 'disabled' visual style
-      console.log("Button disabled (functionally and visually).");
-    } else if (action === "enable") {
-      button.disabled = false; // Enable the button functionality
-      button.classList.remove("disabled"); // Remove the 'disabled' visual style
-      console.log(`Button enabled (functionally and visually).`);
+    if (!(button instanceof HTMLElement)) {
+      console.error("Invalid button element provided to setButtonState.");
+      return false;
+    }
+    if (!buttonStateMap.has(button)) {
+      buttonStateMap.set(button, { disabled: false, originalWidth: null });
+    }
+    const state = buttonStateMap.get(button);
+
+    if (action === ACTION_DISABLE) {
+      state.disabled = true;
+      button.disabled = true;
+      button.classList.add("disabled");
+      console.log("Button disabled.");
+      return true;
+    } else if (action === ACTION_ENABLE) {
+      state.disabled = false;
+      button.disabled = false;
+      button.classList.remove("disabled");
+      console.log("Button enabled.");
+      return true;
     } else {
       console.error(
-        `Invalid action "${action}" provided to setButtonState. Use 'enable' or 'disable'.`
+        `Invalid action "${action}" provided to setButtonState. Use '${ACTION_ENABLE}' or '${ACTION_DISABLE}'.`
       );
+      return false;
     }
   }
 
@@ -545,43 +576,76 @@
   }
 
   /**
-   * Handles newly added elements by linkifying coins in the Ezy-Coin application.
+   * Handles newly added elements by linkifying coins in the Ezy-Coin application using event delegation.
    *
    * @returns {void}
-   * @throws {Error} - Throws an error if linkifying fails.
    */
   function findAndLinkifyCoins() {
     try {
-      const coinElements = document.querySelectorAll(
-        getSelector(window.location.origin).premiumChapterIndicator
-      );
+      // Retrieve selectors based on the current origin
+      const currentSelectors = getSelector(window.location.origin);
+      const containerSelector = currentSelectors.chapterHolderBlockClass; // The common parent for chapters
+      const coinSelector = currentSelectors.premiumChapterIndicator;
+
+      const container = document.querySelector(containerSelector);
+
+      if (!container) {
+        console.error(
+          `Chapter container with selector "${containerSelector}" not found.`
+        );
+        return;
+      }
+
+      // Add event delegation listener if not already added
+      if (!container.dataset.eventDelegationAdded) {
+        container.addEventListener("click", function (event) {
+          // Identify the closest coin element from the clicked target
+          const coin = event.target.closest(coinSelector);
+
+          // If a coin element is clicked within the container
+          if (coin && container.contains(coin)) {
+            debouncedHandleCoinClick(event);
+          }
+        });
+        container.dataset.eventDelegationAdded = "true";
+        console.log("Event delegation listener added to container.");
+      }
+
+      // Select all coin elements within the container
+      const coinElements = container.querySelectorAll(coinSelector);
       console.log(`Found ${coinElements.length} coin elements`);
 
+      // Add the custom class to each coin (only once)
       coinElements.forEach((coin) => {
-        if (!coin.dataset.listenerAdded) {
-          coin.addEventListener("click", handleCoinClick);
+        if (!coin.classList.contains("c-btn-custom-1")) {
           coin.classList.add("c-btn-custom-1");
-          coin.dataset.listenerAdded = true;
         }
       });
 
+      // Calculate the total cost from all coin elements
       totalCost = Array.from(coinElements).reduce(
         (total, coin) =>
           total + (parseInt(coin.textContent.replace(/,/g, ""), 10) || 0),
         0
       );
 
+      // Update the "Unlock All" button if it exists
       const unlockAllButton = document.getElementById("unlock-all-button");
-      if (unlockAllButton && unlockAllButton.updateContent) {
+      if (
+        unlockAllButton &&
+        typeof unlockAllButton.updateContent === "function"
+      ) {
         unlockAllButton.updateContent();
       }
 
       console.log(`Total cost calculated: ${totalCost}`);
+
+      // Log details if the feature is enabled
       if (enableChapterLog) {
         logDetails(coinElements);
       }
     } catch (error) {
-      console.error("Error finding and linking coins:", error);
+      console.error("Error finding and linkifying coins:", error);
     }
   }
 
@@ -620,23 +684,24 @@
   }
 
   /**
-   * Function to handle the click event on a coin
+   * Handles newly added elements by linkifying coins in the Ezy-Coin application using event delegation.
    *
-   * @param {Event} event - The click event
-   * @returns {Promise<void>}
-   * @throws {Error} - Throws an error if handling fails.
+   * @returns {void}
    */
   async function handleCoinClick(event) {
     event.preventDefault();
-    const coin = event.currentTarget;
+    const currentSelectors = getSelector(window.location.origin);
+    const coin = event.target.closest(currentSelectors.premiumChapterIndicator);
+    if (!coin) return;
 
-    if (processingCoins.has(coin)) {
-      console.log("Coin is already being processed, ignoring click");
+    if (processingStateMap.get(coin)) {
+      console.log("Coin is already being processed, ignoring...");
       return;
     }
 
-    setProcessingCoin(coin, "add"); // Add coin to the set
-    setButtonState(coin, "disable"); // Disable the button
+    setProcessingCoin(coin, ACTION_ADD); // Add coin to the set
+    setButtonState(coin, ACTION_DISABLE); // Disable the button
+
     coin.classList.add("clicked");
     console.log("Coin clicked");
     elementSpinner(coin, true);
@@ -651,26 +716,26 @@
       const chapterCoinCost = parseInt(coin.textContent.replace(/,/g, ""), 10);
       if (!(await checkBalance(chapterCoinCost))) {
         await flashCoin(coin, false);
-        setButtonState(coin, "enable"); // Re-enable the coin element
+        setButtonState(coin, ACTION_ENABLE); // Re-enable the coin element
         return;
       }
       const result = await unlockChapter(coin, "series-page");
       if (!result) {
         await flashCoin(coin, false);
-        setButtonState(coin, "enable"); // Re-enable the coin element
+        setButtonState(coin, ACTION_ENABLE); // Re-enable the coin element
         console.error(`Failed to unlock chapter for coin: ${coin.textContent}`);
         return;
       }
     } catch (error) {
       await flashCoin(coin, false);
-      setButtonState(coin, "enable"); // Re-enable the coin element
+      setButtonState(coin, ACTION_ENABLE); // Re-enable the coin element
       console.error(
         `Error unlocking chapter for coin: ${coin.textContent}`,
         error
       );
       return;
     } finally {
-      setProcessingCoin(coin, "delete"); // Remove coin from the set
+      setProcessingCoin(coin, ACTION_DELETE); // Remove coin from the set
       elementSpinner(coin, false);
       // Reconnect the observer
       if (observer) {
@@ -943,7 +1008,10 @@
 
           // Update the button's state based on totalCost
           console.log("Updating the UnlockAllButton State");
-          setButtonState(button, totalCost === 0 ? "disable" : "enable");
+          setButtonState(
+            button,
+            totalCost === 0 ? ACTION_DISABLE : ACTION_ENABLE
+          );
         };
 
         updateButtonContent();
@@ -956,11 +1024,9 @@
         button.updateContent = updateButtonContent;
 
         button.addEventListener("click", async () => {
-          const originalWidth = button.offsetWidth; // Save original button width
-          button.style.width = `${originalWidth}px`; // Set button width to its original width
           buttonText.style.display = "none"; // Hide button text
           elementSpinner(button, true); // Show spinner
-          setButtonState(button, "disable"); // Disable the button
+          setButtonState(button, ACTION_DISABLE); // Disable the button
 
           try {
             await unlockAllChapters();
@@ -968,16 +1034,18 @@
             console.error("Error unlocking all chapters:", error);
           } finally {
             elementSpinner(button, false); // Hide spinner
-            updateButtonContent(); // Restore original button content dynamically then enable or disable button depending on totalcost
+            updateButtonContent(); // Restore original button content dynamically then enable or disable button depending on total cost
             buttonText.style.display = "inline"; // Show button text
-            button.style.width = "auto"; // Reset button width to auto
           }
         });
+        return button;
       } else {
         console.error("Target element for button not found");
+        return null;
       }
     } catch (error) {
       console.error("Error creating unlock all button:", error);
+      return null;
     }
   }
 
@@ -1069,8 +1137,8 @@
         concurrencyLimit,
         coinElements.map((coin) => async () => {
           try {
-            setProcessingCoin(coin, "add");
-            setButtonState(coin, "disable"); // Disable the button
+            setProcessingCoin(coin, ACTION_ADD);
+            setButtonState(coin, ACTION_DISABLE); // Disable the button
             elementSpinner(coin, true);
             const result = await unlockChapter(coin, "series-page");
             if (!result) {
@@ -1078,17 +1146,17 @@
               console.error(
                 `Failed to unlock chapter for coin: ${coin.textContent}`
               );
-              setButtonState(coin, "enable"); // Re-enable the button
+              setButtonState(coin, ACTION_ENABLE); // Re-enable the button
             }
           } catch (error) {
             await flashCoin(coin, false);
-            setButtonState(coin, "enable"); // Re-enable the button
+            setButtonState(coin, ACTION_ENABLE); // Re-enable the button
             console.error(
               `Error unlocking chapter for coin: ${coin.textContent}`,
               error
             );
           } finally {
-            setProcessingCoin(coin, "delete"); // Ensure coin is removed from the set
+            setProcessingCoin(coin, ACTION_DELETE); // Ensure coin is removed from the set
             elementSpinner(coin, false);
           }
         })
