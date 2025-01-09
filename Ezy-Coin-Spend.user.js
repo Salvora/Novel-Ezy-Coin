@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.8.6
+// @version     1.8.7
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -214,7 +214,7 @@
       console.log("Settings UI visibility is disabled. Skipping creation.");
       return;
     }
-
+    console.log("Creating UI for settings");
     const menuTemplate = GM_getResourceText(SETTINGS.resourceName);
     document.body.insertAdjacentHTML("beforeend", menuTemplate);
 
@@ -305,13 +305,13 @@
       state.disabled = true;
       button.disabled = true;
       button.classList.add("disabled");
-      console.log("Button disabled.");
+      // console.log("Button disabled.");
       return true;
     } else if (action === ACTION_ENABLE) {
       state.disabled = false;
       button.disabled = false;
       button.classList.remove("disabled");
-      console.log("Button enabled.");
+      // console.log("Button enabled.");
       return true;
     } else {
       console.error(
@@ -574,7 +574,6 @@
     console.error("Unable to extract coin cost from element:", element);
     return null;
   }
-
   /**
    * Handles newly added elements by linkifying coins in the Ezy-Coin application using event delegation.
    *
@@ -588,10 +587,9 @@
       const coinSelector = currentSelectors.premiumChapterIndicator;
 
       const container = document.querySelector(containerSelector);
-
       if (!container) {
-        console.error(
-          `Chapter container with selector "${containerSelector}" not found.`
+        console.warn(
+          `Chapter container with selector "${containerSelector}" not found. Wait for the page to fully load.`
         );
         return;
       }
@@ -608,12 +606,12 @@
           }
         });
         container.dataset.eventDelegationAdded = "true";
-        console.log("Event delegation listener added to container.");
+        // console.log("Event delegation listener added to container.");
       }
 
       // Select all coin elements within the container
       const coinElements = container.querySelectorAll(coinSelector);
-      console.log(`Found ${coinElements.length} coin elements`);
+      console.log(`Found ${coinElements.length} locked premium chapters`);
 
       // Add the custom class to each coin (only once)
       coinElements.forEach((coin) => {
@@ -1016,7 +1014,7 @@
 
         updateButtonContent();
         button.appendChild(buttonText);
-        elementSpinner(button, false);
+        //elementSpinner(button, false);
         targetElement.appendChild(button);
         console.log("Button inserted successfully");
 
@@ -1353,6 +1351,7 @@
   function initializeUnlockAll() {
     totalCost = 0;
     createUnlockAllButton();
+
     observer = new MutationObserver((mutations) => {
       const shouldUpdate = mutations.some(
         (mutation) => mutation.addedNodes.length || mutation.removedNodes.length
@@ -1402,7 +1401,6 @@
    */
   function setupUIAndMenus() {
     try {
-      console.log("Creating UI for settings");
       settingsUI();
       GM_registerMenuCommand("Set Limit", updateConcurrencyLimit);
       manageSettingsVisibility();
@@ -1457,6 +1455,10 @@
     }
   }
 
-  // Call the init function to start the script
-  init();
+  // Call the init function to start the script after window load
+  if (document.readyState === "complete") {
+    init();
+  } else {
+    window.addEventListener("load", init);
+  }
 })();
