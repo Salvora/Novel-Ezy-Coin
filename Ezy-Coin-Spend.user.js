@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Novel-Ezy-Coin
 // @namespace   https://github.com/Salvora
-// @version     1.8.8
+// @version     1.8.9
 // @grant       GM_addStyle
 // @grant       GM_getResourceText
 // @grant       GM_setValue
@@ -22,6 +22,7 @@
 // @match       https://hiraethtranslation.com/novel/*
 // @match       https://luminarynovels.com/novel/*
 // @license     GPL-3.0-or-later
+// @noframes
 // @run-at      document-end
 // ==/UserScript==
 
@@ -1441,7 +1442,7 @@
       ).chapterPageKeywordList.some((keyword) =>
         window.location.pathname.includes(`/${keyword}`)
       );
-
+      setupUIAndMenus();
       // Initialize based on page type
       if (!isChapterPage) {
         initializeUnlockAll();
@@ -1450,15 +1451,8 @@
       }
     } catch (error) {
       console.error("Error during initialization:", error);
-    } finally {
-      setupUIAndMenus();
     }
   }
 
-  // Call the init function to start the script after window load
-  if (document.readyState === "complete") {
-    init();
-  } else {
-    window.addEventListener("load", init);
-  }
+  init();
 })();
