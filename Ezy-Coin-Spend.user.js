@@ -8,7 +8,7 @@
 // @grant       GM_getValue
 // @grant       GM_registerMenuCommand
 // @grant       GM_unregisterMenuCommand
-// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/styles.css?v=1.7.1#sha256=6173ed57658951060840d9991b8e46aa9949a46b5eafd595c85d1e8216994396
+// @resource    customCSS https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/styles.css?v=1.7.2#sha256=6173ed57658951060840d9991b8e46aa9949a46b5eafd595c85d1e8216994396
 // @resource    SETTINGS_HTML https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Resources/ezy-coin-settings.html?v=1.1.5#sha256=b907b17ee8de2d213e06ce056df9519f1be0e0a414b583bd649aba9c44512c2c
 // @resource    SiteConfig https://github.com/Salvora/Novel-Ezy-Coin/raw/refs/heads/main/Config/SiteConfig.json?v=1.1.8#sha256=fc1ff1599ea7f81e988649a5b9fe98d03e9570458174c59580bebc16c5c91aae
 // @author      Salvora
@@ -749,31 +749,28 @@
   }
 
   /**
-   * Function to flash the coin with an icon
+   * Flashes the coin element by temporarily removing its text and applying a flash class.
    *
-   * @param {HTMLElement} coin - The coin element to flash
-   * @param {boolean} isSuccess - Whether to flash green for success or red for failure
-   * @returns {Promise<void>} - Resolves after the flash effect is complete
-   * @throws {Error} - Throws an error if flashing fails.
+   * @param {HTMLElement} coin - The coin element to flash.
+   * @param {boolean} isSuccess - Determines the type of flash: `true` for success, `false` for failure.
+   * @returns {Promise<void>} - A promise that resolves after the flash effect is complete.
    */
   async function flashCoin(coin, isSuccess) {
-    const originalContent = coin.innerHTML;
+    // Locate the text node within the coin element
+    const textNode = Array.from(coin.childNodes).find(
+      (node) =>
+        node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== ""
+    );
 
-    // Determine the icon and class based on success or failure
-    const iconClass = isSuccess
-      ? "fas fa-check-circle flash-icon"
-      : "fas fa-times-circle flash-icon";
-    const flashClass = isSuccess ? "flash-green" : "flash-red";
-
-    // Replace the content of the coin element with the appropriate icon
-    coin.innerHTML = `<i class="${iconClass}"></i>`;
+    const originalText = textNode.textContent;
+    textNode.textContent = "";
+    const flashClass = isSuccess ? "flashing-success" : "flashing-failure";
     coin.classList.add(flashClass);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    coin.classList.remove(flashClass);
 
-    setTimeout(() => {
-      coin.classList.remove(flashClass);
-      // Restore the original content after the flash effect
-      coin.innerHTML = originalContent;
-    }, 1000);
+    // Restore the original text
+    textNode.textContent = originalText;
   }
 
   /**

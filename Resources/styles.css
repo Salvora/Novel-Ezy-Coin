@@ -67,6 +67,41 @@
 
 .coin {
   transition: transform 0.1s ease;
+  position: relative; /* Ensure relative positioning for pseudo-elements */
+}
+
+/* Hide all child elements during flash */
+.coin.flashing-success > *,
+.coin.flashing-failure > * {
+  visibility: hidden;
+}
+
+/* Flash Success */
+.coin.flashing-success::after {
+  content: "\f00c"; /* Font Awesome check-circle icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: green;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5em;
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+/* Flash Failure */
+.coin.flashing-failure::after {
+  content: "\f00d"; /* Font Awesome times-circle icon */
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  color: red;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5em;
+  pointer-events: none; /* Allow clicks to pass through */
 }
 
 .coin.clicked {
